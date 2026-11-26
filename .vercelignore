@@ -1,0 +1,6 @@
+# su Vercel va solo la pagina: niente script locali, prove, schema del database e chiavi
+palestra.py
+strumenti/
+supabase/
+README.md
+.env*

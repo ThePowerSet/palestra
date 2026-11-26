@@ -1,0 +1,7 @@
+# chiavi: solo su questo computer
+.env.local
+.env*.local
+# file di sistema e temporanei
+.DS_Store
+__pycache__/
+*.tmp
