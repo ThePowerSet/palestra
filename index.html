@@ -6,6 +6,7 @@
 <title>Palestra</title>
 <meta name="description" content="Trading interview drills, one trick at a time: a short lesson, random exercises with hints, spaced review and timed tests. In English and Italian.">
 <script src="js/tema.js"></script>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="stile.css">
 </head>
 <body>
@@ -22,12 +23,14 @@
   </button>
 </header>
 <main id="vista"></main>
+<footer class="piede" id="piede"></footer>
 
 <!-- motore, sincronizzazione (attiva solo se config.js è compilato) e generatori di base -->
 <script src="config.js"></script>
 <script src="js/motore.js"></script>
 <script src="js/nuvola.js"></script>
 <script src="js/base.js"></script>
+<script src="js/grafici.js"></script>
 <!-- contenuti: un file per trucco; per aggiungerne uno, una riga qui -->
 <script src="contenuti/materie.js"></script>
 <script src="contenuti/calcolo/01_denominatori_2_5.js"></script>
@@ -41,9 +44,22 @@
 <script src="contenuti/calcolo/09_quadrati_veloci.js"></script>
 <script src="contenuti/desk/01_regola_del_16.js"></script>
 <script src="contenuti/desk/02_opzione_atm.js"></script>
+<script src="contenuti/opzioni/01_parita.js"></script>
+<script src="contenuti/opzioni/02_straddle.js"></script>
+<script src="contenuti/opzioni/03_digitale.js"></script>
+<script src="contenuti/opzioni/04_delta.js"></script>
+<script src="contenuti/opzioni/05_gamma_theta.js"></script>
+<script src="contenuti/opzioni/06_vega.js"></script>
+<script src="contenuti/opzioni/07_vol_forward.js"></script>
 <script src="contenuti/sequenze/01_differenze.js"></script>
 <script src="contenuti/probabilita/01_valore_atteso.js"></script>
-<!-- interfaccia -->
+<script src="contenuti/probabilita/02_bayes.js"></script>
+<script src="contenuti/probabilita/03_rilancio.js"></script>
+<script src="contenuti/probabilita/04_kelly.js"></script>
+<!-- external reading list (Library page) -->
+<script src="contenuti/risorse.js"></script>
+<!-- interfaccia: "Try it" pieces under some lessons, then the app -->
+<script src="js/laboratorio.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

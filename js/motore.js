@@ -66,6 +66,22 @@
   };
   P.mcd = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) [a, b] = [b, a % b]; return a; };
 
+  // Same text, same numbers: runs fn with Math.random replaced by a generator seeded from a string, so the
+  // daily challenge gives everyone the same questions on the same day, in either language.
+  P.conSeme = (seme, fn) => {
+    let h = 1779033703 ^ seme.length;
+    for (let i = 0; i < seme.length; i++) { h = Math.imul(h ^ seme.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
+    let a = h >>> 0;
+    const originale = Math.random;
+    Math.random = () => {                                        // mulberry32
+      a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    try { return fn(); } finally { Math.random = originale; }
+  };
+
   // ---------- formati: one notation in both languages, decimal point and a comma for thousands
   //            (from 10,000 up, so 4-digit numbers stay as 4700) ----------
 
@@ -73,7 +89,8 @@
   P.fmt = (x, dec = 6) => {
     if (!isFinite(x)) return String(x);
     const r = Math.round(x * 10 ** dec) / 10 ** dec;
-    let s = Math.abs(r).toFixed(dec).replace(/\.?0+$/, '');
+    let s = Math.abs(r).toFixed(dec);
+    if (dec > 0) s = s.replace(/\.?0+$/, ''); // only decimals: with dec = 0, 30 must stay 30
     let [int, frac] = s.split('.');
     if (int.length > 4) int = int.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     s = frac ? int + '.' + frac : int;

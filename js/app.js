@@ -28,6 +28,41 @@
   let S = null;      // sessione in corso
   let timer = null;  // conto alla rovescia del test
 
+  // ---------- small shared pieces: progress bars, level dots, icons ----------
+
+  // a bar drawn in SVG, because the CSP forbids inline styles: p from 0 to 1
+  const barra = (p, cls = '') => `<svg class="barretta ${cls}" viewBox="0 0 100 6" preserveAspectRatio="none" aria-hidden="true"><rect width="100" height="6" rx="3" class="fondo"/><rect width="${Math.max(0, Math.min(100, p * 100)).toFixed(1)}" height="6" rx="3" class="pieno"/></svg>`;
+
+  // per level: 0 = fewer than 3 answers, 1 = practising, 2 = at least 80% in the last 10
+  const statoLivelli = id => {
+    const righe = P.risposteDi(id);
+    return [1, 2, 3].map(l => {
+      const rr = righe.filter(r => +r.livello === l).slice(-10);
+      if (rr.length < 3) return 0;
+      return rr.filter(r => r.esito === 'giusta').length / rr.length >= 0.8 ? 2 : 1;
+    });
+  };
+  const puntini = id => {
+    const nomi = [t('non ancora', 'not yet'), t('in allenamento', 'practising'), t('solido', 'solid')];
+    const st = statoLivelli(id);
+    return `<span class="puntini" title="${st.map((s, k) => `L${k + 1}: ${nomi[s]}`).join(' · ')}">${st.map(s => `<i class="p${s}"></i>`).join('')}</span>`;
+  };
+
+  const ICONE = {
+    lezione: '<path d="M4 5.5C6.5 4 9.5 4 12 5.5v14c-2.5-1.5-5.5-1.5-8 0z"/><path d="M12 5.5c2.5-1.5 5.5-1.5 8 0v14c-2.5-1.5-5.5-1.5-8 0"/>',
+    allenamento: '<path d="M4 17l5-5 4 4 7-8"/><path d="M15 8h5v5"/>',
+    ripasso: '<path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/>',
+    test: '<circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 2.5M9.5 2.5h5"/>',
+    debole: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17v.5"/>',
+    risorse: '<path d="M5 4h4v16H5zM10 4h4v16h-4z"/><path d="M15.5 5.2l3.8-1 3.7 15.5-3.8 1z"/>',
+    schede: '<rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+  };
+  const icona = (k, cls = 'icona') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONE[k]}</svg>`;
+
+  // the next trick to study: the first one, in programme order, not marked as learnt
+  const ordine = () => P.materie.flatMap(m => P.trucchiDi(m.id));
+  const prossimoTrucco = () => ordine().find(x => !P.dati.imparati[x.id]);
+
   // ---------- testata e rotte ----------
 
   function testata(nome) {
@@ -36,14 +71,32 @@
       ['allenamento', t('Allenamento', 'Practice')],
       ['ripasso', t('Ripasso', 'Review')],
       ['test', t('Test a tempo', 'Timed test')],
+      ['risorse', t('Risorse', 'Library')],
       ['registro', t('Registro', 'Log')],
-      ['perche', t('Perché', 'About')],
     ];
+    const attiva = nome === 'trucco' || nome === 'schede' ? '' : nome;
     document.getElementById('nav').innerHTML = voci.map(([r, l]) =>
-      `<a href="#/${r}" class="${r === nome ? 'attivo' : ''}">${l}${r === 'ripasso' ? ' <span class="conta" id="conta-ripasso" hidden></span>' : ''}</a>`).join('');
+      `<a href="#/${r}" class="${r === attiva ? 'attivo' : ''}"${r === attiva ? ' aria-current="page"' : ''}>${l}${r === 'ripasso' ? ' <span class="conta" id="conta-ripasso" hidden></span>' : ''}</a>`).join('');
     document.querySelectorAll('.lingue button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lingua === P.lingua)));
     document.documentElement.lang = P.lingua;
+    piede();
     aggiornaTema();
+  }
+
+  function piede() {
+    const el = document.getElementById('piede');
+    if (!el) return;
+    el.innerHTML = `<div class="piede-dentro">
+      <div class="piede-marchio"><a class="marchio" href="#/">Palestra</a>
+        <p>${t('Esercizi per i colloqui di trading, un trucco alla volta. Gratis, senza account, codice aperto.', 'Drills for trading interviews, one trick at a time. Free, no account, open source.')}</p></div>
+      <nav class="piede-link" aria-label="${t('Altre pagine', 'More pages')}">
+        <a href="#/schede">${t('Formulario', 'Cheat sheet')}</a>
+        <a href="#/risorse">${t('Risorse', 'Library')}</a>
+        <a href="#/perche">${t('Perché esiste', 'About')}</a>
+        <a href="https://github.com/ThePowerSet/palestra" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://thepowerset.github.io/" target="_blank" rel="noopener">thepowerset.github.io</a>
+      </nav>
+    </div>`;
   }
 
   // ---------- theme: device, light, dark, in the same order as the toggle on thepowerset.github.io ----------
@@ -67,7 +120,7 @@
     aggiornaTema();
   }
 
-  const rotte = { '': home, trucco: lezione, allenamento: confAllenamento, ripasso: confRipasso, test: confTest, registro, sessione, accedi, perche };
+  const rotte = { '': home, trucco: lezione, allenamento: confAllenamento, ripasso: confRipasso, test: confTest, registro, sessione, accedi, perche, risorse, schede };
 
   const rotta = () => location.hash.replace(/^#\/?/, '').split('/');
 
@@ -102,43 +155,100 @@
 
   // ---------- programma ----------
 
+  // The weakest trick worth practising now: under 80% in its last 20 answers (at least 5), lowest first
+  function piuDebole() {
+    let peggio = null;
+    for (const x of P.trucchi) {
+      const st = P.statistiche(P.risposteDi(x.id).slice(-20));
+      if (st.n >= 5 && st.precisione < 0.8 && (!peggio || st.precisione < peggio.st.precisione)) peggio = { trucco: x, st };
+    }
+    return peggio;
+  }
+
+  // what to do today: due reviews, the next lesson, the weak spot, the timed test
+  function oggi() {
+    const scad = P.ripassi(), dopo = prossimoTrucco(), debole = piuDebole();
+    const test = P.dati.sessioni.filter(s => s.modalita === 'test');
+    const ultimo = test[test.length - 1];
+    const carta = (cls, ic, kicker, titolo, testo, azione) => `<div class="passo ${cls}">
+        <span class="passo-icona">${icona(ic)}</span>
+        <div class="passo-corpo"><span class="etichetta">${kicker}</span><b>${titolo}</b><span class="mini">${testo}</span></div>
+        ${azione}</div>`;
+    const righe = [];
+    if (scad.length) {
+      righe.push(carta('urgente', 'ripasso', t('Ripasso', 'Review'),
+        t(scad.length === 1 ? 'Un trucco torna oggi' : `${scad.length} trucchi tornano oggi`, scad.length === 1 ? 'One trick is due today' : `${scad.length} tricks are due today`),
+        esc(scad.map(x => tr(x.trucco.titolo)).slice(0, 3).join(' · ')) + (scad.length > 3 ? ' …' : ''),
+        `<a class="bottone primario" href="#/ripasso">${t('Ripassa', 'Review')}</a>`));
+    }
+    if (debole) {
+      righe.push(carta('', 'debole', t('Punto debole', 'Weak spot'), esc(tr(debole.trucco.titolo)),
+        t(`${perc(debole.st.precisione)} nelle ultime ${debole.st.n} risposte`, `${perc(debole.st.precisione)} in the last ${debole.st.n} answers`),
+        `<button class="bottone" data-allena="${debole.trucco.id}">${t('Allenati', 'Practise')}</button>`));
+    }
+    if (dopo) {
+      righe.push(carta('', 'lezione', Object.keys(P.dati.imparati).length ? t('Prossima lezione', 'Next lesson') : t('Da dove partire', 'Where to start'),
+        `${esc(tr(P.trovaMateria(dopo.materia).titolo))} ${dopo.numero} · ${esc(tr(dopo.titolo))}`, esc(tr(dopo.sottotitolo)),
+        `<a class="bottone${scad.length ? '' : ' primario'}" href="#/trucco/${dopo.id}">${t('Apri', 'Open')}</a>`));
+    }
+    righe.push(carta('', 'test', t('Test a tempo', 'Timed test'),
+      ultimo ? t(`Ultimo: ${ultimo.punteggio} punti`, `Last: ${ultimo.punteggio} points`) : t('Dieci domande al minuto', 'Ten questions a minute'),
+      ultimo ? esc(tr(ultimo.titolo)) + ` · ${P.dataBreve(ultimo.data)}` : t('Calcolo di base e i trucchi di calcolo, senza suggerimenti.', 'Basic arithmetic and the mental maths tricks, no hints.'),
+      `<a class="bottone" href="#/test">${t('Prova', 'Take it')}</a>`));
+    return righe.join('');
+  }
+
   function home() {
-    const imparati = Object.keys(P.dati.imparati).length, scad = P.ripassi().length;
+    const tutti = P.trucchi.length, imparati = P.trucchi.filter(x => P.dati.imparati[x.id]).length;
+    const tot = P.statistiche(P.dati.risposte);
+    const cono = P.grafici.cono({ passi: 120, cammini: 7, W: 1100, H: 420, sigmaGiorno: 0.012, scalaPct: 0.38, classe: 'disegna' }).svg;
     let h = `
-      <section class="intro">
-        <h1>${t('Un trucco alla volta', 'One trick at a time')}</h1>
-        <p>${t('Leggi la lezione, allenati su quel trucco con i suggerimenti, poi mescolalo con quelli che sai già. Le domande sono generate a caso: non finiscono e non si imparano a memoria.',
-          'Read the lesson, practise that trick with hints, then mix it with the ones you already know. Questions are generated at random: they never run out and you can\'t learn them by heart.')}</p>
-        <p class="mini"><a href="#/perche">${t('Perché esiste questa palestra →', 'Why this exists →')}</a></p>
+      <section class="eroe">
+        <div class="eroe-sfondo" aria-hidden="true">${cono}</div>
+        <span class="kicker">${t('Colloqui di trading · calcolo, opzioni, probabilità', 'Trading interviews · mental maths, options, probability')}</span>
+        <h1>${t('I numeri che un desk ti chiede, <em>un trucco alla volta</em>.', 'The numbers a desk asks for, <em>one trick at a time</em>.')}</h1>
+        <p class="lead">${t('Ogni trucco ha una lezione breve, domande generate a caso su tre livelli con i suggerimenti, e torna nel ripasso finché non è tuo. Poi lo metti alla prova a tempo.',
+          'Each trick has a short lesson, random questions on three levels with hints, and comes back in review until it sticks. Then you test it against the clock.')}</p>
+        <p class="eroe-dati"><span><b>${tutti}</b> ${t('trucchi', 'tricks')}</span><span><b>${P.materie.filter(m => P.trucchiDi(m.id).length).length}</b> ${t('materie', 'subjects')}</span><span><b>∞</b> ${t('domande', 'questions')}</span>${tot.n
+          ? `<span><b>${imparati}/${tutti}</b> ${t('imparati', 'learnt')}</span><span><b>${perc(tot.precisione)}</b> ${t('giuste', 'right')}</span>` : ''}</p>
         ${ownerDevice() && P.nuvola.stato === 'fuori' ? `<p class="mini"><a href="#/registro">${t('Accedi dal Registro', 'Sign in from the Log')}</a> ${t('per avere i progressi su tutti i tuoi dispositivi.', 'to have your progress on all your devices.')}</p>` : ''}
       </section>
-      <section class="modi">
-        <a class="modo" href="#/allenamento"><span class="modo-titolo">${t('Allenamento', 'Practice')}</span><span class="modo-testo">${imparati
-          ? t(`Domande a caso dai ${imparati} trucchi che hai imparato, con i suggerimenti.`, `Random questions from the ${imparati} tricks you have learnt, with hints.`)
-          : t('Domande a caso dai trucchi che scegli, con i suggerimenti.', 'Random questions from the tricks you choose, with hints.')}</span></a>
-        <a class="modo" href="#/ripasso"><span class="modo-titolo">${t('Ripasso', 'Review')}${scad ? ` <span class="conta">${scad}</span>` : ''}</span><span class="modo-testo">${scad
-          ? t(scad === 1 ? 'Oggi torna un trucco.' : `Oggi tornano ${scad} trucchi.`, scad === 1 ? 'One trick is due today.' : `${scad} tricks are due today.`)
-          : t('Niente in scadenza oggi.', 'Nothing due today.')}</span></a>
-        <a class="modo" href="#/test"><span class="modo-titolo">${t('Test a tempo', 'Timed test')}</span><span class="modo-testo">${t('Scegli la durata, con o senza penalità. Niente suggerimenti.', 'Pick the length, with or without a penalty. No hints.')}</span></a>
-      </section>`;
+      <section class="blocco">
+        <div class="blocco-testa"><span class="kicker">${t('Oggi', 'Today')}</span><h2>${t('Cosa fare adesso', 'What to do now')}</h2></div>
+        <div class="passi-oggi">${oggi()}</div>
+        ${tot.n ? '' : `<ol class="metodo">
+          <li><b>${t('Leggi la lezione', 'Read the lesson')}</b><span>${t('La scena da colloquio, perché il trucco funziona, come farlo a mente.', 'The interview scene, why the trick works, how to do it in your head.')}</span></li>
+          <li><b>${t('Allenati con i suggerimenti', 'Practise with hints')}</b><span>${t('Dieci domande dal livello base a quello più difficile; il primo suggerimento indica la strada, il secondo fa il primo passo.', 'Ten questions from the basic level to the hardest; the first hint points the way, the second takes the first step.')}</span></li>
+          <li><b>${t('Segnalo come imparato', 'Mark it as learnt')}</b><span>${t('Torna nel ripasso dopo 1, 3, 7, 14 e 30 giorni, e prima se sbagli.', 'It comes back in review after 1, 3, 7, 14 and 30 days, and sooner if you slip.')}</span></li>
+          <li><b>${t('Mescola e metti il tempo', 'Mix and add the clock')}</b><span>${t('Allenamento misto, dove il trucco lo scopri dopo, e test a tempo come nelle selezioni.', 'Mixed practice, where you find out the trick afterwards, and timed tests as in recruitment.')}</span></li>
+        </ol>`}
+      </section>
+      <section class="blocco">
+        <div class="blocco-testa"><span class="kicker">${t('Programma', 'Programme')}</span><h2>${t('Tutti i trucchi', 'Every trick')}</h2>
+          <p class="mini">${t('I tre puntini sono i livelli: pieno quando sei sopra l\'80% nelle ultime dieci risposte.', 'The three dots are the levels: filled once you are above 80% in the last ten answers.')} <a href="#/schede">${t('Tutte le schede in una pagina →', 'Every summary on one page →')}</a></p></div>`;
     for (const m of P.materie) {
-      if (!P.trucchiDi(m.id).length) continue;
-      h += `<section class="materia"><div class="materia-testa"><h2>${esc(tr(m.titolo))}</h2><p>${esc(tr(m.descrizione))}</p></div>`;
+      const lista = P.trucchiDi(m.id);
+      if (!lista.length) continue;
+      const fatti = lista.filter(x => P.dati.imparati[x.id]).length;
+      h += `<section class="materia" id="materia-${m.id}"><div class="materia-testa"><div><h3>${esc(tr(m.titolo))}</h3><p>${esc(tr(m.descrizione))}</p></div>
+        <div class="materia-stato"><span class="mini">${fatti}/${lista.length} ${t('imparati', 'learnt')}</span>${barra(fatti / lista.length)}</div></div>`;
       for (const c of m.capitoli) {
         const tc = P.trucchiDi(m.id, c.id);
-        if (tc.length) h += `<h3 class="capitolo">${esc(tr(c.titolo))}</h3><ul class="trucchi">${tc.map(rigaTrucco).join('')}</ul>`;
+        if (tc.length) h += `${m.capitoli.length > 1 ? `<h4 class="capitolo">${esc(tr(c.titolo))}</h4>` : ''}<ul class="trucchi">${tc.map(rigaTrucco).join('')}</ul>`;
       }
       h += '</section>';
     }
+    h += '</section>';
     vista.innerHTML = h;
+    vista.querySelectorAll('[data-allena]').forEach(b => { b.onclick = () => allenaTrucco(P.trovaTrucco(b.dataset.allena)); });
   }
 
   function rigaTrucco(trucco) {
     const st = P.statistiche(P.risposteDi(trucco.id)), dal = P.dati.imparati[trucco.id];
     return `<li><a href="#/trucco/${trucco.id}">
-      <span class="numero">${trucco.numero}</span>
+      <span class="numero">${String(trucco.numero).padStart(2, '0')}</span>
       <span class="corpo"><span class="titolo">${esc(tr(trucco.titolo))}</span><span class="sotto">${esc(tr(trucco.sottotitolo))}</span></span>
-      <span class="lato">${dal ? `<span class="stato fatto">${t('imparato', 'learnt')} ${P.dataBreve(dal)}</span>` : `<span class="stato">${t('da fare', 'to do')}</span>`}${st.n ? `<span class="mini">${st.n} ${t('risposte', 'answers')} · ${perc(st.precisione)}</span>` : ''}</span>
+      <span class="lato">${puntini(trucco.id)}${dal ? `<span class="stato fatto">${t('imparato', 'learnt')} ${P.dataBreve(dal)}</span>` : st.n ? `<span class="stato">${perc(st.precisione)} · ${st.n}</span>` : `<span class="stato">${t('da fare', 'to do')}</span>`}</span>
     </a></li>`;
   }
 
@@ -154,18 +264,26 @@
         <button class="primario" data-azione="allena">${t('Allenati su questo trucco', 'Practise this trick')}</button>
         <button data-azione="imparato">${dal ? t(`Imparato il ${P.dataBreve(dal)} · togli`, `Learnt on ${P.dataBreve(dal)} · undo`) : t('Segna come imparato', 'Mark as learnt')}</button>
       </div>`;
+    const livelli = statoLivelli(trucco.id), nomiStato = [t('meno di 3 risposte', 'fewer than 3 answers'), t('in allenamento', 'practising'), t('solido', 'solid')];
+    const lab = P.laboratori && P.laboratori[trucco.id];
     vista.innerHTML = `<article class="lezione">
       <p class="briciole"><a href="#/">${esc(tr(m.titolo))}</a> › ${esc(tr(c.titolo))}</p>
       <h1><span class="sopratitolo">${t('Trucco', 'Trick')} ${trucco.numero}</span>${esc(tr(trucco.titolo))}</h1>
+      <p class="sottotitolo-lezione">${esc(tr(trucco.sottotitolo))}</p>
       <div class="aggancio"><span class="etichetta">${t('La domanda', 'The question')}</span><p>${esc(tr(trucco.aggancio))}</p></div>
       ${bottoni}
-      ${st.n ? `<p class="mini">${t(`Finora ${st.n} risposte, ${perc(st.precisione)} giuste, ${sec(st.secondi)} a risposta, suggerimento aperto nel ${perc(st.aiuti)} dei casi.`,
-        `So far ${st.n} answers, ${perc(st.precisione)} right, ${sec(st.secondi)} per answer, hint opened ${perc(st.aiuti)} of the time.`)}</p>` : ''}
+      ${st.n ? `<div class="andamento">
+        <p class="mini">${t(`Finora ${st.n} risposte, ${perc(st.precisione)} giuste, ${sec(st.secondi)} a risposta, suggerimento aperto nel ${perc(st.aiuti)} dei casi.`,
+          `So far ${st.n} answers, ${perc(st.precisione)} right, ${sec(st.secondi)} per answer, hint opened ${perc(st.aiuti)} of the time.`)}</p>
+        <ul class="livelli-stato">${livelli.map((s, k) => `<li class="s${s}"><i></i>L${k + 1} · ${esc(nomeLivello(trucco, k))}<span>${nomiStato[s]}</span></li>`).join('')}</ul>
+      </div>` : ''}
       <div class="testo-lezione">${tr(trucco.lezione)}</div>
+      ${lab ? '<section class="lab" id="lab"></section>' : ''}
       <div class="scheda"><span class="etichetta">${t('In breve', 'In short')}</span><p>${esc(tr(trucco.scheda))}</p></div>
       ${bottoni}
-      <nav class="vicini">${prec ? `<a href="#/trucco/${prec.id}">← ${esc(tr(prec.titolo))}</a>` : '<span></span>'}${succ ? `<a href="#/trucco/${succ.id}">${esc(tr(succ.titolo))} →</a>` : ''}</nav>
+      <nav class="vicini">${prec ? `<a href="#/trucco/${prec.id}"><span class="mini">← ${t('Precedente', 'Previous')}</span>${esc(tr(prec.titolo))}</a>` : '<span></span>'}${succ ? `<a class="dopo" href="#/trucco/${succ.id}"><span class="mini">${t('Successivo', 'Next')} →</span>${esc(tr(succ.titolo))}</a>` : ''}</nav>
     </article>`;
+    if (lab) lab(document.getElementById('lab'));
     vista.querySelectorAll('[data-azione="allena"]').forEach(b => { b.onclick = () => allenaTrucco(trucco); });
     vista.querySelectorAll('[data-azione="imparato"]').forEach(b => {
       b.onclick = () => {
@@ -350,7 +468,7 @@
         <span class="meta">${S.totale ? `${i} / ${S.totale}` : `${t('domanda', 'question')} ${i}`}${S.subito ? `<span class="chip">${esc(etichetta)}</span>` : ''}${S.limite ? '<span class="tempo" id="tempo"></span>' : ''}</span>
       </div>
       ${S.totale ? `<div class="progresso"><div id="avanzamento"></div></div>` : ''}
-      <article class="domanda ${fatto ? 'chiusa ' + v.esito : ''}">
+      <article class="domanda ${fatto ? 'chiusa ' + v.esito : ''}${fatto && !v.visto ? ' appena' : ''}">
         ${origine}
         <p class="testo">${q.testo}</p>
         ${q.nota ? `<p class="nota">${esc(q.nota)}</p>` : ''}
@@ -366,8 +484,9 @@
       </div>
     </section>`;
 
-    const barra = document.getElementById('avanzamento');
-    if (barra) barra.style.width = `${avanzamento * 100}%`;
+    if (fatto) v.visto = true; // the verdict animates once, not on every redraw
+    const avanz = document.getElementById('avanzamento');
+    if (avanz) avanz.style.width = `${avanzamento * 100}%`;
     const form = document.getElementById('form');
     if (form) form.onsubmit = e => { e.preventDefault(); rispondi(document.getElementById('campo').value); };
     vista.querySelectorAll('.opzione').forEach(b => { b.onclick = () => rispondi(+b.dataset.k); });
@@ -438,6 +557,7 @@
           : `<div><b>${R.aiuti}</b><span>${t('suggerimenti aperti', 'hints opened')}</span></div>`}
         ${S.limite ? `<div><b>${R.saltate}</b><span>${t('saltate', 'skipped')}</span></div>` : ''}
       </div>
+      ${S.modalita === 'test' ? graficoTest(S.titolo) : ''}
       ${gruppi.length > 1 ? `<table class="tabella"><thead><tr><th>${t('Trucco', 'Trick')}</th><th>${t('Giuste', 'Right')}</th></tr></thead><tbody>${gruppi.sort((a, b) => a.giuste / a.n - b.giuste / b.n).map(g => `<tr><td>${esc(g.nome)}</td><td>${g.giuste}/${g.n}</td></tr>`).join('')}</tbody></table>` : ''}
       <h2>${t('Le domande', 'The questions')}</h2>
       <p class="mini">${t('Apri una riga per vedere i passi.', 'Open a row to see the steps.')}</p>
@@ -451,6 +571,17 @@
     vista.querySelector('[data-azione="ancora"]').onclick = () => avvia(S.cfg);
     const bImpara = vista.querySelector('[data-azione="impara"]');
     if (bImpara) bImpara.onclick = () => { P.segnaImparato(S.trucco.id, true); bImpara.remove(); aggiornaConta(); };
+  }
+
+  // Scores of the timed tests taken with the same length and scoring, so progress is visible
+  function graficoTest(titolo) {
+    const simili = P.dati.sessioni.filter(s => s.modalita === 'test' && s.titolo && s.titolo.en === titolo.en).slice(-20);
+    if (simili.length < 2) return '';
+    const punti = simili.map(s => ({ y: s.punteggio, etichetta: `${P.dataBreve(s.data)}: ${s.punteggio}` }));
+    const best = Math.max(...punti.map(p => p.y)), ultimi = simili.slice(-5);
+    const media = ultimi.reduce((a, s) => a + s.punteggio, 0) / ultimi.length;
+    return `<div class="carta-grafico"><span class="etichetta">${esc(tr(titolo))} · ${t('i tuoi punteggi', 'your scores')}</span>${P.grafici.punteggi(punti)}
+      <p class="mini">${t(`Migliore: ${best} · media delle ultime ${ultimi.length}: ${P.fmt(media, 1)} · ${simili.length} test`, `Best: ${best} · average of the last ${ultimi.length}: ${P.fmt(media, 1)} · ${simili.length} tests`)}</p></div>`;
   }
 
   // ---------- allenamento a caso ----------
@@ -674,6 +805,91 @@
     </section>`;
   }
 
+  // ---------- formulario: every trick's summary on one page, to reread before an interview ----------
+
+  function schede() {
+    let h = `<section class="largo">
+      <div class="blocco-testa"><span class="kicker">${t('Formulario', 'Cheat sheet')}</span><h1>${t('Tutte le schede in una pagina', 'Every summary on one page')}</h1>
+        <p class="lead">${t('Il riquadro «In breve» di ogni trucco, da rileggere prima di un colloquio o di un test. Si stampa bene.', 'The "In short" box of every trick, to reread before an interview or a test. It prints well.')}</p></div>`;
+    for (const m of P.materie) {
+      const lista = P.trucchiDi(m.id);
+      if (!lista.length) continue;
+      h += `<h2 class="schede-materia">${esc(tr(m.titolo))}</h2><div class="schede">${lista.map(x => `
+        <a class="scheda-carta" href="#/trucco/${x.id}"><span class="numero">${String(x.numero).padStart(2, '0')}</span>
+          <b>${esc(tr(x.titolo))}</b><p>${esc(tr(x.scheda))}</p></a>`).join('')}</div>`;
+    }
+    vista.innerHTML = h + '</section>';
+  }
+
+  // ---------- library: free material found on the open web (contenuti/risorse.js) ----------
+
+  const ARGOMENTI = {
+    'options': due('Opzioni', 'Options'), 'greeks': due('Greche', 'Greeks'), 'volatility': due('Volatilità', 'Volatility'),
+    'probability': due('Probabilità', 'Probability'), 'brainteasers': due('Rompicapi', 'Brainteasers'), 'market-making': due('Market making', 'Market making'),
+    'estimation': due('Stime', 'Estimation'), 'mental-maths': due('Calcolo mentale', 'Mental maths'), 'statistics': due('Statistica', 'Statistics'),
+    'rates': due('Tassi e bond', 'Rates and bonds'), 'credit': due('Credito', 'Credit'), 'microstructure': due('Microstruttura', 'Microstructure'),
+    'programming': due('Programmazione', 'Programming'), 'interview-prep': due('Colloqui', 'Interviews'),
+  };
+  const TIPI = {
+    notes: due('Dispense', 'Notes'), course: due('Corso', 'Course'), video: due('Video', 'Video'), book: due('Libro', 'Book'), article: due('Articolo', 'Article'),
+    paper: due('Paper', 'Paper'), tool: due('Strumento', 'Tool'), puzzles: due('Problemi', 'Puzzles'), podcast: due('Podcast', 'Podcast'), newsletter: due('Newsletter', 'Newsletter'),
+  };
+  const LIVELLI_RISORSE = due(['Per cominciare', 'Dopo le basi', 'Per approfondire'], ['Start here', 'Once the basics are in', 'Going deeper']);
+  const filtro = { argomento: '', livello: 0, testo: '' };
+
+  function risorse() {
+    const tutte = P.risorse || [];
+    const conta = {};
+    tutte.forEach(r => r.topics.forEach(k => { conta[k] = (conta[k] || 0) + 1; }));
+    const argomenti = Object.keys(ARGOMENTI).filter(k => conta[k]);
+    vista.innerHTML = `<section class="largo">
+      <div class="blocco-testa"><span class="kicker">${t('Risorse', 'Library')}</span><h1>${t('Da leggere, guardare e risolvere', 'To read, watch and solve')}</h1>
+        <p class="lead">${t('Materiale gratuito trovato sul web aperto, scelto per i colloqui di trading e quant: corsi, dispense, strumenti e problemi. Ogni scheda dice perché vale il tempo e da dove cominciare.',
+          'Free material from the open web, chosen for trading and quant interviews: courses, notes, tools and problems. Each card says why it is worth the time and where to start.')}</p></div>
+      <div class="filtri">
+        <input type="search" id="filtro-testo" placeholder="${t('Cerca per titolo, autore, argomento', 'Search by title, author, topic')}" value="${esc(filtro.testo)}" aria-label="${t('Cerca', 'Search')}">
+        <div class="pillole" role="group" aria-label="${t('Argomento', 'Topic')}">
+          <button type="button" class="pill" data-arg="" aria-pressed="${!filtro.argomento}">${t('Tutti', 'All')} <span>${tutte.length}</span></button>
+          ${argomenti.map(k => `<button type="button" class="pill" data-arg="${k}" aria-pressed="${filtro.argomento === k}">${esc(tr(ARGOMENTI[k]))} <span>${conta[k]}</span></button>`).join('')}
+        </div>
+        <div class="pillole" role="group" aria-label="${t('Livello', 'Level')}">
+          <button type="button" class="pill" data-liv="0" aria-pressed="${!filtro.livello}">${t('Ogni livello', 'Any level')}</button>
+          ${tr(LIVELLI_RISORSE).map((l, k) => `<button type="button" class="pill" data-liv="${k + 1}" aria-pressed="${filtro.livello === k + 1}">${l}</button>`).join('')}
+        </div>
+      </div>
+      <p class="mini" id="conteggio" role="status"></p>
+      <div class="risorse" id="elenco-risorse"></div>
+      <p class="mini nota-risorse">${t('Link esterni, controllati quando sono stati aggiunti. Niente qui è affiliato o sponsorizzato.', 'External links, checked when they were added. Nothing here is affiliated or sponsored.')}</p>
+    </section>`;
+    const elenco = document.getElementById('elenco-risorse');
+    const dominio = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return ''; } };
+    const carta = r => `<article class="risorsa">
+        <div class="risorsa-testa"><span class="tipo">${esc(tr(TIPI[r.type] || due(r.type, r.type)))}</span><span class="liv l${r.level}" title="${esc(tr(LIVELLI_RISORSE)[r.level - 1] || '')}">${'●'.repeat(r.level)}${'○'.repeat(3 - r.level)}</span></div>
+        <h3><a href="${esc(r.url)}" target="_blank" rel="noopener noreferrer">${esc(r.title)}</a></h3>
+        <p class="chi">${esc([r.author, r.publisher].filter(Boolean).join(' · '))}</p>
+        <p>${esc(tr(r.why))}</p>
+        ${r.start_here && tr(r.start_here) ? `<p class="parti"><span class="etichetta">${t('Da dove partire', 'Start with')}</span>${esc(tr(r.start_here))}</p>` : ''}
+        <div class="risorsa-piede">${r.topics.map(k => `<span class="tag">${esc(tr(ARGOMENTI[k] || due(k, k)))}</span>`).join('')}${r.free ? '' : `<span class="tag a-pagamento">${t('a pagamento', 'paid')}</span>`}<span class="dominio">${esc(dominio(r.url))} ↗</span></div>
+      </article>`;
+    const mostra = () => {
+      const parole = filtro.testo.toLowerCase().split(/\s+/).filter(Boolean);
+      const scelte = tutte.filter(r => (!filtro.argomento || r.topics.includes(filtro.argomento)) && (!filtro.livello || r.level === filtro.livello)
+        && parole.every(p => [r.title, r.author, r.publisher, tr(r.why), r.topics.map(k => tr(ARGOMENTI[k] || '')).join(' ')].join(' ').toLowerCase().includes(p)))
+        .sort((a, b) => a.level - b.level || (a.free === b.free ? 0 : a.free ? -1 : 1));
+      elenco.innerHTML = scelte.map(carta).join('') || `<p class="mini">${t('Nessuna risorsa con questi filtri.', 'No resources match these filters.')}</p>`;
+      document.getElementById('conteggio').textContent = t(`${scelte.length} risorse`, `${scelte.length} resources`);
+    };
+    const campo = document.getElementById('filtro-testo');
+    campo.oninput = () => { filtro.testo = campo.value; mostra(); };
+    vista.querySelectorAll('[data-arg]').forEach(b => {
+      b.onclick = () => { filtro.argomento = b.dataset.arg; vista.querySelectorAll('[data-arg]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); mostra(); };
+    });
+    vista.querySelectorAll('[data-liv]').forEach(b => {
+      b.onclick = () => { filtro.livello = +b.dataset.liv; vista.querySelectorAll('[data-liv]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); mostra(); };
+    });
+    mostra();
+  }
+
   // ---------- registro ----------
 
   function registro() {
@@ -702,6 +918,16 @@
         <thead><tr><th>${t('Trucco', 'Trick')}</th><th>${t('Imparato', 'Learnt')}</th><th>${t('Risposte', 'Answers')}</th><th>${t('Giuste', 'Right')}</th><th>${t('Tempo', 'Time')}</th><th>${t('Con sugg.', 'With hint')}</th><th>${t('Ultima', 'Last')}</th></tr></thead>
         <tbody>${trucchi.join('')}${blocchi}</tbody>
       </table></div>
+      ${(() => {
+        const visti = new Set(), grafici = [];
+        for (const s of P.dati.sessioni.slice().reverse()) {
+          if (s.modalita !== 'test' || !s.titolo || visti.has(s.titolo.en)) continue;
+          visti.add(s.titolo.en);
+          const g = graficoTest(s.titolo);
+          if (g) grafici.push(g);
+        }
+        return grafici.length ? `<h2>${t('Test a tempo', 'Timed tests')}</h2><div class="griglia-grafici">${grafici.slice(0, 4).join('')}</div>` : '';
+      })()}
       <h2>${t('Ultime sessioni', 'Recent sessions')}</h2>
       ${sessioni.length ? `<div class="scorre"><table class="tabella">
         <thead><tr><th>${t('Data', 'Date')}</th><th>${t('Sessione', 'Session')}</th><th>${t('Giuste', 'Right')}</th><th>${t('Punteggio', 'Score')}</th><th>${t('Durata', 'Time')}</th></tr></thead>

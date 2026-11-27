@@ -25,6 +25,17 @@ Palestra.materia({
 });
 
 Palestra.materia({
+  id: 'opzioni',
+  titolo: { it: 'Opzioni e greche', en: 'Options and Greeks' },
+  descrizione: { it: 'Parità, delta, gamma, theta e vega fatti a voce: le domande di un colloquio da market maker.', en: 'Parity, delta, gamma, theta and vega done out loud: the questions of a market-making interview.' },
+  capitoli: [
+    { id: 'parita', titolo: { it: 'Parità e payoff', en: 'Parity and payoffs' } },
+    { id: 'greche', titolo: { it: 'Le greche', en: 'The Greeks' } },
+    { id: 'volatilita', titolo: { it: 'Volatilità nel tempo', en: 'Volatility over time' } },
+  ],
+});
+
+Palestra.materia({
   id: 'sequenze',
   titolo: { it: 'Sequenze', en: 'Sequences' },
   descrizione: { it: 'Trovare la regola in pochi secondi, come nei test numerici.', en: 'Finding the rule in a few seconds, as in numerical tests.' },
@@ -36,8 +47,10 @@ Palestra.materia({
 Palestra.materia({
   id: 'probabilita',
   titolo: { it: 'Probabilità', en: 'Probability' },
-  descrizione: { it: 'Le domande a voce dei colloqui: valore atteso, attese, mercati su dadi e carte.', en: 'The verbal interview questions: expected value, waiting times, markets on dice and cards.' },
+  descrizione: { it: 'Le domande a voce dei colloqui: valore atteso, probabilità condizionata, giochi da giocare al meglio e quanto puntare.', en: 'The verbal interview questions: expected value, conditional probability, games to play well and how much to bet.' },
   capitoli: [
     { id: 'prob', titolo: { it: 'Valore atteso', en: 'Expected value' } },
+    { id: 'condizionata', titolo: { it: 'Probabilità condizionata', en: 'Conditional probability' } },
+    { id: 'giochi', titolo: { it: 'Giochi e puntate', en: 'Games and bets' } },
   ],
 });
