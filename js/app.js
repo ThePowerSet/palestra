@@ -280,6 +280,7 @@
       <div class="testo-lezione">${tr(trucco.lezione)}</div>
       ${lab ? '<section class="lab" id="lab"></section>' : ''}
       <div class="scheda"><span class="etichetta">${t('In breve', 'In short')}</span><p>${esc(tr(trucco.scheda))}</p></div>
+      ${letture(trucco)}
       ${bottoni}
       <nav class="vicini">${prec ? `<a href="#/trucco/${prec.id}"><span class="mini">← ${t('Precedente', 'Previous')}</span>${esc(tr(prec.titolo))}</a>` : '<span></span>'}${succ ? `<a class="dopo" href="#/trucco/${succ.id}"><span class="mini">${t('Successivo', 'Next')} →</span>${esc(tr(succ.titolo))}</a>` : ''}</nav>
     </article>`;
@@ -836,6 +837,40 @@
   };
   const LIVELLI_RISORSE = due(['Per cominciare', 'Dopo le basi', 'Per approfondire'], ['Start here', 'Once the basics are in', 'Going deeper']);
   const filtro = { argomento: '', livello: 0, testo: '' };
+  // the ten to start from (the research's own ranking, firm pages left out), shown first with a mark
+  const CONSIGLIATE = ['grinstead-snell-probability', 'mit-6-041sc-probability', 'brainstellar-puzzles', 'winkler-mathematical-puzzles-revised',
+    'oic-put-call-parity', 'oic-understanding-options-greeks', 'gundersen-atm-approximation', 'bennett-trading-volatility', 'zetamac-arithmetic', 'lesswrong-fermi-estimates'];
+  // what to read after each lesson: ids from contenuti/risorse.js
+  const LETTURE = {
+    'frazioni-2-5': ['treasurydirect-understanding-pricing', 'zetamac-arithmetic'],
+    'desk-regola-16': ['oic-rule-of-16', 'macroption-rule-of-16'],
+    'desk-atm': ['gundersen-atm-approximation', 'oic-understanding-options-greeks'],
+    'opz-parita': ['oic-put-call-parity', 'hull-options-futures-derivatives'],
+    'opz-straddle': ['gundersen-atm-approximation', 'bennett-trading-volatility'],
+    'opz-digitale': ['haugh-foundations-financial-engineering', 'hull-options-futures-derivatives'],
+    'opz-delta': ['oic-understanding-options-greeks', 'eurex-trading-strategies'],
+    'opz-gamma-theta': ['moontower-approximating-gamma', 'sinclair-volatility-trading', 'taleb-dynamic-hedging'],
+    'opz-vega': ['oic-understanding-options-greeks', 'sinclair-volatility-trading'],
+    'opz-vol-forward': ['bennett-trading-volatility', 'cboe-vix-methodology'],
+    'opz-pnl-greche': ['oic-understanding-options-greeks', 'taleb-dynamic-hedging'],
+    'seq-differenze': ['oeis'],
+    'prob-valore-atteso': ['grinstead-snell-probability', 'brainstellar-puzzles'],
+    'prob-bayes': ['three-blue-one-brown-bayes', 'mit-6-041sc-probability'],
+    'prob-rilancio': ['brainstellar-puzzles', 'winkler-mathematical-puzzles-revised'],
+    'prob-kelly': ['thorp-kelly-criterion'],
+    'tassi-dv01': ['tuckman-serrat-fixed-income', 'ftse-russell-carry-concept'],
+    'tassi-cds': ['isda-standard-cds-examples', 'berd-credit-term-structures', 'hull-white-valuing-cds'],
+  };
+  const letture = trucco => {
+    const ids = LETTURE[trucco.id] || (trucco.materia === 'calcolo' ? ['zetamac-arithmetic'] : []);
+    const rr = ids.map(id => (P.risorse || []).find(r => r.id === id)).filter(Boolean);
+    if (!rr.length) return '';
+    return `<section class="approfondire"><span class="etichetta">${t('Per approfondire', 'Go further')}</span><ul>${rr.map(r => `<li>
+      <a href="${esc(r.url)}" target="_blank" rel="noopener noreferrer">${esc(r.title)}</a>
+      <span class="mini">${esc(r.publisher || r.author)}${r.free ? '' : ' · ' + t('a pagamento', 'paid')}</span>
+      ${r.start_here ? `<span class="parti">${esc(tr(r.start_here))}</span>` : ''}</li>`).join('')}</ul>
+      <a class="mini" href="#/risorse">${t('Tutte le risorse →', 'The whole library →')}</a></section>`;
+  };
 
   function risorse() {
     const tutte = P.risorse || [];
@@ -864,7 +899,7 @@
     const elenco = document.getElementById('elenco-risorse');
     const dominio = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return ''; } };
     const carta = r => `<article class="risorsa">
-        <div class="risorsa-testa"><span class="tipo">${esc(tr(TIPI[r.type] || due(r.type, r.type)))}</span><span class="liv l${r.level}" title="${esc(tr(LIVELLI_RISORSE)[r.level - 1] || '')}">${'●'.repeat(r.level)}${'○'.repeat(3 - r.level)}</span></div>
+        <div class="risorsa-testa"><span class="tipo">${esc(tr(TIPI[r.type] || due(r.type, r.type)))}${CONSIGLIATE.includes(r.id) ? ` · <b class="consigliata">${t('da cui partire', 'start here')}</b>` : ''}</span><span class="liv l${r.level}" title="${esc(tr(LIVELLI_RISORSE)[r.level - 1] || '')}">${'●'.repeat(r.level)}${'○'.repeat(3 - r.level)}</span></div>
         <h3><a href="${esc(r.url)}" target="_blank" rel="noopener noreferrer">${esc(r.title)}</a></h3>
         <p class="chi">${esc([r.author, r.publisher].filter(Boolean).join(' · '))}</p>
         <p>${esc(tr(r.why))}</p>
@@ -875,7 +910,11 @@
       const parole = filtro.testo.toLowerCase().split(/\s+/).filter(Boolean);
       const scelte = tutte.filter(r => (!filtro.argomento || r.topics.includes(filtro.argomento)) && (!filtro.livello || r.level === filtro.livello)
         && parole.every(p => [r.title, r.author, r.publisher, tr(r.why), r.topics.map(k => tr(ARGOMENTI[k] || '')).join(' ')].join(' ').toLowerCase().includes(p)))
-        .sort((a, b) => a.level - b.level || (a.free === b.free ? 0 : a.free ? -1 : 1));
+        .sort((a, b) => {
+          const ca = CONSIGLIATE.indexOf(a.id), cb = CONSIGLIATE.indexOf(b.id);
+          if (ca >= 0 || cb >= 0) return (ca < 0 ? 99 : ca) - (cb < 0 ? 99 : cb);
+          return a.level - b.level || (a.free === b.free ? 0 : a.free ? -1 : 1);
+        });
       elenco.innerHTML = scelte.map(carta).join('') || `<p class="mini">${t('Nessuna risorsa con questi filtri.', 'No resources match these filters.')}</p>`;
       document.getElementById('conteggio').textContent = t(`${scelte.length} risorse`, `${scelte.length} resources`);
     };

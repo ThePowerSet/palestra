@@ -556,6 +556,15 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .tag.a-pagamento { color: var(--aiuto); border-color: color-mix(in srgb, var(--aiuto) 40%, transparent); }
 .dominio { margin-left: auto; font: 500 .72rem var(--mono); color: var(--tenue); }
 .nota-risorse { margin-top: 2rem; }
+.consigliata { color: var(--accento); font-weight: 600; }
+/* after a lesson: what to read next */
+.approfondire { margin: 1.2rem 0; padding: .9rem 1.2rem; border: 1px solid var(--linea); border-radius: var(--raggio); background: var(--carta); }
+.approfondire ul { list-style: none; margin: .2rem 0 .6rem; padding: 0; }
+.approfondire li { display: flex; flex-direction: column; padding: .5rem 0; border-top: 1px solid var(--linea); }
+.approfondire li:first-child { border-top: 0; }
+.approfondire li a { font-weight: 600; text-decoration: none; }
+.approfondire li a::after { content: " ↗"; font-weight: 400; color: var(--tenue); }
+.approfondire .parti { font-size: .85rem; color: var(--tenue); }
 
 /* ---------- piede ---------- */
 
