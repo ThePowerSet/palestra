@@ -48,6 +48,41 @@
     };
   }
 
+  // Standard coupons are paid quarterly on act/360: notional × coupon × days / 360
+  function cedola() {
+    const N = P.pick([5, 10, 20, 25, 50]) * 1e6, c = P.pick([100, 500]), gg = P.pick([88, 90, 91, 92, 94]), v = N * c / 10000 * gg / 360;
+    return {
+      testo: P.t(`Un CDS standard su ${P.fmt(N / 1e6)} milioni di euro paga la cedola fissa di ${c} pb ogni trimestre. Il periodo di maturazione ha ${gg} giorni. Quanto paga chi compra protezione a questa data?`,
+        `A standard CDS on EUR ${P.fmt(N / 1e6)} million pays the fixed ${c} bp coupon every quarter. The accrual period has ${gg} days. How much does the protection buyer pay on this date?`),
+      nota: P.t('in euro, al centesimo', 'in euros, to the cent'),
+      risposta: P.numero(v, { tol: 0.011, mostra: P.fmt(Math.round(v * 100) / 100) }),
+      suggerimenti: [
+        P.t('Le cedole dei CDS standard maturano sui giorni effettivi, con un anno di 360 giorni (act/360).', 'Standard CDS coupons accrue on actual days, over a 360-day year (act/360).'),
+        `${P.fmt(N)} × ${P.fmt(c / 10000)} × ${gg}/360.`,
+      ],
+      soluzione: [`${P.fmt(N)} × ${P.fmt(c / 10000)} × ${gg} / 360 = ${P.fmt(Math.round(v * 100) / 100)}`],
+      fonte: P.fonte('isda', 'section "Standardizing coupon dates"'),
+    };
+  }
+
+  // Trading mid-period: the buyer will pay a full first coupon, so the seller hands back what accrued before the trade
+  function regolamento() {
+    const N = P.pick([10, 20, 25, 36, 50]) * 1e6, c = P.pick([100, 500]), punti = P.pick([1, 1.5, 2, 2.5, 3.5, 4]), gg = P.int(10, 85);
+    const up = N * punti / 100, rateo = N * c / 10000 * gg / 360, netto = up - rateo;
+    return {
+      testo: P.t(`Compri protezione su ${P.fmt(N / 1e6)} milioni con cedola standard ${c} pb, quotata ${P.fmt(punti)} punti di upfront. Il periodo di cedola in corso è iniziato ${gg} giorni fa. Quanto paghi in tutto al regolamento, al netto del rateo che ti viene restituito?`,
+        `You buy protection on ${P.fmt(N / 1e6)} million with a ${c} bp standard coupon, quoted at ${P.fmt(punti)} points upfront. The current coupon period started ${gg} days ago. What do you pay in all at settlement, net of the accrued coupon handed back to you?`),
+      nota: P.t('al centesimo', 'to the cent'),
+      risposta: P.numero(netto, { tol: 0.011, mostra: P.fmt(Math.round(netto * 100) / 100) }),
+      suggerimenti: [
+        P.t('L\'upfront è punti × nominale. Alla prossima data pagherai una cedola intera, anche per i giorni prima dell\'acquisto: il venditore te li restituisce subito.', 'The upfront is points × notional. On the next date you will pay a full coupon, including the days before you bought: the seller hands them back now.'),
+        P.t(`Rateo restituito: ${P.fmt(N)} × ${P.fmt(c / 10000)} × ${gg}/360 = ${P.fmt(Math.round(rateo * 100) / 100)}.`, `Accrued handed back: ${P.fmt(N)} × ${P.fmt(c / 10000)} × ${gg}/360 = ${P.fmt(Math.round(rateo * 100) / 100)}.`),
+      ],
+      soluzione: [P.t(`upfront: ${P.fmt(up)}`, `upfront: ${P.fmt(up)}`), `${P.fmt(up)} − ${P.fmt(Math.round(rateo * 100) / 100)} = ${P.fmt(Math.round(netto * 100) / 100)}`],
+      fonte: P.fonte('isda', 'section "Converter assumptions"'),
+    };
+  }
+
   function upfront() {
     const c = P.pick([100, 100, 500]), s = c === 100 ? P.pick([25, 50, 150, 200, 300, 400, 600]) : P.pick([300, 400, 700, 900, 1000]);
     const D = P.pick([4, 4.5, 3.5]), u = (s - c) * D / 10000, compra = P.chance(0.6);
@@ -115,8 +150,16 @@
       it: 'Spread ≈ λ × (1 − R); λ ≈ spread / (1 − R). Default entro T: 1 − e^(−λT), poco meno di λT. Upfront ≈ (spread − cedola) × RPV01 (circa 4 a 5 anni). Probabilità neutrali al rischio, sopra quelle storiche.',
       en: 'Spread ≈ λ × (1 − R); λ ≈ spread / (1 − R). Default within T: 1 − e^(−λT), a bit under λT. Upfront ≈ (spread − coupon) × RPV01 (about 4 at 5 years). Risk-neutral probabilities, above historical ones.',
     },
+    fonti: [
+      P.fonte('isda', 'section "Standardizing coupon dates"', { nota: { it: 'cedole standard 100/500 pb, act/360, date fisse', en: 'standard 100/500 bp coupons, act/360, fixed dates' } }),
+      P.fonte('isda', 'section "Converter assumptions"', { nota: { it: 'upfront e rateo restituito al regolamento', en: 'upfront and accrued rebate at settlement' } }),
+    ],
     test: false,
     nomiLivelli: { it: ['Spread', 'Probabilità', 'Upfront'], en: ['Spread', 'Probability', 'Upfront'] },
-    livelli: [spread, probabilita, upfront],
+    livelli: [
+      () => (P.chance(0.7) ? spread() : cedola()),
+      probabilita,
+      () => (P.chance(0.6) ? upfront() : regolamento()),
+    ],
   });
 })();

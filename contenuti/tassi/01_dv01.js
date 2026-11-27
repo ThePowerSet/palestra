@@ -132,6 +132,10 @@
       it: 'ΔP ≈ −D × P × Δy. DV01 = D × valore × 0.0001, in euro per pb; P&L = DV01 × pb con il segno. Copertura: N₂ = N₁ × DV01₁ / DV01₂, solo per movimenti paralleli.',
       en: 'ΔP ≈ −D × P × Δy. DV01 = D × value × 0.0001, in euros per bp; P&L = DV01 × bp with its sign. Hedge: N₂ = N₁ × DV01₁ / DV01₂, parallel moves only.',
     },
+    fonti: [
+      P.fonte('zhou', '§6.4, "Duration and convexity"', { nota: { it: 'la teoria: duration, convessità e variazione di prezzo', en: 'the theory: duration, convexity and price change' } }),
+      P.fonte('crack', 'Question 3.13', { nota: { it: 'dimezzare l\'esposizione di una posizione in bond', en: 'halving the exposure of a bond position' } }),
+    ],
     test: false,
     nomiLivelli: { it: ['Prezzo', 'DV01 e P&L', 'Copertura'], en: ['Price', 'DV01 and P&L', 'Hedging'] },
     livelli: [prezzo, dv01, copertura],

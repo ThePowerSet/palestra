@@ -258,6 +258,8 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .materia { margin: 0 0 1.2rem; padding: 1.2rem 1.3rem .5rem; background: var(--carta); border: 1px solid var(--linea); border-radius: calc(var(--raggio) + 4px); }
 .materia-testa { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem 2rem; flex-wrap: wrap; padding-bottom: .9rem; border-bottom: 1px solid var(--linea); }
 .materia-testa h3 { margin: 0 0 .2rem; font-size: 1.55rem; }
+.materia-testa h3 a { color: inherit; text-decoration: none; }
+.materia-testa h3 a:hover { color: var(--accento); }
 .materia-testa p { margin: 0; color: var(--tenue); font-size: .92rem; max-width: 60ch; }
 .materia-stato { display: flex; flex-direction: column; gap: .35rem; width: 150px; text-align: right; }
 .capitolo { font: 500 .7rem var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--tenue); margin: 1.2rem 0 .2rem .4rem; }
@@ -526,45 +528,19 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .scheda-carta b { font: 500 1.15rem var(--serif); }
 .scheda-carta p { margin: .3rem 0 0; font-size: .93rem; color: var(--tenue); }
 
-/* ---------- risorse ---------- */
+/* ---------- fonti: where the problems come from ---------- */
 
-.filtri { display: flex; flex-direction: column; gap: .7rem; margin: 1.2rem 0 .6rem; }
-.filtri input[type="search"] {
-  font: 1rem var(--sans); color: var(--testo); background: var(--carta); max-width: 28rem;
-  border: 1px solid var(--linea-forte); border-radius: 999px; padding: .55rem 1.1rem;
-}
-.filtri input[type="search"]:focus { border-color: var(--accento); outline: none; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accento) 16%, transparent); }
-.risorse { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: .9rem; margin-top: .6rem; }
-.risorsa {
-  position: relative; display: flex; flex-direction: column; padding: 1.1rem 1.2rem 1rem; background: var(--carta);
-  border: 1px solid var(--linea); border-radius: var(--raggio); transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
-}
-.risorsa:hover { border-color: var(--linea-forte); box-shadow: var(--ombra); transform: translateY(-2px); }
-.risorsa-testa { display: flex; justify-content: space-between; align-items: center; margin-bottom: .5rem; }
-.tipo { font: 500 .68rem var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--arancio); }
-.liv { font-size: .6rem; letter-spacing: .15em; color: var(--accento); }
-.risorsa h3 { font: 500 1.2rem/1.25 var(--serif); margin: 0 0 .2rem; }
-.risorsa h3 a { color: var(--testo); text-decoration: none; }
-.risorsa h3 a::after { content: ""; position: absolute; inset: 0; border-radius: var(--raggio); } /* the whole card is the link */
-.risorsa:hover h3 a { color: var(--accento); }
-.risorsa .chi { margin: 0 0 .6rem; color: var(--tenue); font-size: .82rem; }
-.risorsa > p { margin: 0 0 .6rem; font-size: .93rem; }
-.risorsa .parti { font-size: .86rem; background: var(--sfondo); border-radius: 10px; padding: .5rem .7rem; }
-.risorsa .parti .etichetta { margin-bottom: .1rem; font-size: .64rem; }
-.risorsa-piede { display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; margin-top: auto; padding-top: .5rem; }
-.tag { font: 500 .7rem var(--sans); color: var(--tenue); border: 1px solid var(--linea); border-radius: 999px; padding: .05rem .5rem; }
-.tag.a-pagamento { color: var(--aiuto); border-color: color-mix(in srgb, var(--aiuto) 40%, transparent); }
-.dominio { margin-left: auto; font: 500 .72rem var(--mono); color: var(--tenue); }
-.nota-risorse { margin-top: 2rem; }
-.consigliata { color: var(--accento); font-weight: 600; }
-/* after a lesson: what to read next */
-.approfondire { margin: 1.2rem 0; padding: .9rem 1.2rem; border: 1px solid var(--linea); border-radius: var(--raggio); background: var(--carta); }
-.approfondire ul { list-style: none; margin: .2rem 0 .6rem; padding: 0; }
-.approfondire li { display: flex; flex-direction: column; padding: .5rem 0; border-top: 1px solid var(--linea); }
-.approfondire li:first-child { border-top: 0; }
-.approfondire li a { font-weight: 600; text-decoration: none; }
-.approfondire li a::after { content: " ↗"; font-weight: 400; color: var(--tenue); }
-.approfondire .parti { font-size: .85rem; color: var(--tenue); }
+.fonti { margin: 1.2rem 0; padding: .9rem 1.2rem; border: 1px solid var(--linea); border-radius: var(--raggio); background: var(--carta); }
+.fonti ul { list-style: none; margin: .3rem 0 .5rem; padding: 0; }
+.fonti li { padding: .45rem 0; border-top: 1px solid var(--linea); font-size: .93rem; }
+.fonti li:first-child { border-top: 0; }
+.fonti cite, .fonte-domanda cite { font-style: italic; }
+.fonti a, .fonte-domanda a { text-decoration: none; }
+.fonti a::after, .fonte-domanda a::after { content: " ↗"; font-style: normal; color: var(--tenue); }
+.fonti .posto { display: block; padding-left: 1rem; font-size: .88rem; color: var(--tenue); }
+.fonti .posto::before { content: "→ "; color: var(--arancio); }
+.fonte-domanda { margin: .2rem 0 1rem; font-size: .84rem; color: var(--tenue); }
+.rivedi .fonte-domanda { margin: .2rem 0 .4rem 1.6rem; }
 
 /* ---------- piede ---------- */
 
@@ -605,7 +581,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
   .testo-lezione { font-size: 1.06rem; }
   .vicini { grid-template-columns: 1fr; }
   .vicini a.dopo { grid-column: 1; }
-  .risorse, .schede { grid-template-columns: 1fr; }
+  .schede { grid-template-columns: 1fr; }
   /* chart text is drawn at 640px wide and shrinks with the chart: make it larger so it stays readable */
   .lab-grafico .g-asse { font-size: 19px; }
   .lab-grafico .g-legenda text { font-size: 19px; }
@@ -623,7 +599,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
   body::before, .testata, .piede, .azioni-lezione, .lab, .vicini { display: none; }
   main { padding: 0; max-width: none; }
   main > * { animation: none; }
-  .scheda-carta, .materia, .risorsa { box-shadow: none; border-color: #bbb; break-inside: avoid; }
+  .scheda-carta, .materia { box-shadow: none; border-color: #bbb; break-inside: avoid; }
   .schede { grid-template-columns: 1fr 1fr; gap: .5rem; }
   a { color: #000; }
 }

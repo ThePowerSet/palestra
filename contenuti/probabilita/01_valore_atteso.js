@@ -122,6 +122,95 @@
     };
   }
 
+  // Collecting n toys: stage k waits n/(n − k) boxes on average
+  function collezione() {
+    const n = P.int(3, 6), parti = [];
+    for (let k = 0; k < n; k++) parti.push(n / (n - k));
+    const v = parti.reduce((s, x) => s + x, 0);
+    return {
+      testo: P.t(`In ogni scatola di cereali c'è una sorpresa, una di ${n} diverse, tutte con la stessa probabilità. Quante scatole devi comprare in media per averle tutte?`,
+        `Every cereal box holds a toy, one of ${n} different kinds, all equally likely. How many boxes must you buy on average to get them all?`),
+      nota: P.t('due decimali', 'two decimals'),
+      risposta: P.numero(v, { tol: 0.011, mostra: P.fmt(Math.round(v * 100) / 100) }),
+      suggerimenti: [
+        P.t('Dividi l\'attesa in tappe: quando ne hai già k, una scatola ne porta una nuova con probabilità (n − k)/n.', 'Split the wait into stages: once you have k, a box brings a new one with probability (n − k)/n.'),
+        P.t(`Ogni tappa dura in media n/(n − k) scatole: ${parti.map((x, k) => `${n}/${n - k}`).join(' + ')}.`, `Each stage lasts n/(n − k) boxes on average: ${parti.map((x, k) => `${n}/${n - k}`).join(' + ')}.`),
+      ],
+      soluzione: [`${parti.map(x => P.fmt(Math.round(x * 100) / 100)).join(' + ')} = ${P.fmt(Math.round(v * 100) / 100)}`, P.t(`cioè ${n} × (1 + 1/2 + … + 1/${n})`, `that is ${n} × (1 + 1/2 + … + 1/${n})`)],
+      fonte: P.fonte('crack', 'Question 4.1'),
+    };
+  }
+
+  // Expected pairs sharing a birthday: one indicator per pair of people
+  function compleanni() {
+    const n = P.pick([20, 23, 25, 28, 30, 40, 50]), coppie = n * (n - 1) / 2, v = coppie / 365;
+    return {
+      testo: P.t(`A una festa ci sono ${n} persone. Quante coppie di persone con lo stesso compleanno ti aspetti, in media? (365 giorni, tutti ugualmente probabili.)`,
+        `There are ${n} people at a party. How many pairs of people sharing a birthday do you expect, on average? (365 days, all equally likely.)`),
+      nota: P.t('due decimali', 'two decimals'),
+      risposta: P.numero(v, { tol: 0.006, mostra: P.fmt(Math.round(v * 100) / 100) }),
+      suggerimenti: [
+        P.t('Un indicatore per ogni coppia di persone: vale 1 se hanno lo stesso compleanno. La media di ognuno è 1/365.', 'One indicator for every pair of people: it is 1 if they share a birthday. Each has mean 1/365.'),
+        P.t(`Le coppie sono ${n} × ${n - 1} / 2 = ${coppie}.`, `There are ${n} × ${n - 1} / 2 = ${coppie} pairs.`),
+      ],
+      soluzione: [`C(${n}, 2) = ${coppie}`, `${coppie} / 365 = ${P.fmt(Math.round(v * 100) / 100)}`],
+      fonte: P.fonte('crack', 'Question 1.36'),
+    };
+  }
+
+  // Tying noodle ends at random: with k noodles left, the next tie closes a loop with probability 1/(2k − 1)
+  function spaghetti() {
+    const n = P.int(2, 6), parti = [];
+    for (let k = n; k >= 1; k--) parti.push(2 * k - 1);
+    const v = parti.reduce((s, d) => s + 1 / d, 0);
+    return {
+      testo: P.t(`Nel piatto ci sono ${n} spaghetti. Bendato, prendi due capi liberi a caso e li annodi; ripeti finché non restano capi liberi. Quanti anelli ti aspetti di formare, in media?`,
+        `There are ${n} noodles in the bowl. Blindfolded, you take two free ends at random and tie them; you repeat until no free ends are left. How many loops do you expect to form, on average?`),
+      nota: P.t('tre decimali', 'three decimals'),
+      risposta: P.numero(v, { tol: 0.0015, mostra: P.fmt(Math.round(v * 1000) / 1000) }),
+      suggerimenti: [
+        P.t('Con k spaghetti ci sono 2k capi. Preso un capo, l\'altro capo scelto chiude un anello solo se è la sua altra estremità: 1 su 2k − 1.', 'With k noodles there are 2k ends. Having picked one end, the other end closes a loop only if it is its own other end: 1 in 2k − 1.'),
+        P.t('Ogni nodo riduce di uno gli spaghetti, che si chiuda un anello o no. Somma le probabilità di chiudere, una per nodo.', 'Every tie leaves one fewer noodle, whether it closes a loop or not. Add up the chances of closing, one per tie.'),
+      ],
+      soluzione: [parti.map(d => `1/${d}`).join(' + ') + ` = ${P.fmt(Math.round(v * 1000) / 1000)}`],
+      fonte: P.fonte('zhou', '§4.5, "Connecting noodles"'),
+    };
+  }
+
+  // Each person gets their own badge with probability 1/n: n indicators of mean 1/n add up to 1, whatever n is
+  function badge() {
+    const n = P.pick([10, 25, 40, 100, 500]);
+    return {
+      testo: P.t(`${n} persone mettono il loro badge in una scatola e ognuno ne ripesca uno a caso. Quante persone ritrovano in media il proprio?`,
+        `${n} people drop their badges into a box and each draws one back at random. On average, how many get their own back?`),
+      risposta: P.numero(1),
+      suggerimenti: [
+        P.t('Non serve sapere come sono legate le estrazioni: un indicatore per persona, e la linearità.', 'You do not need to know how the draws depend on each other: one indicator per person, and linearity.'),
+        P.t(`Ognuno ritrova il suo con probabilità 1/${n}.`, `Each person gets their own with probability 1/${n}.`),
+      ],
+      soluzione: [`${n} × 1/${n} = 1`, P.t('vale per ogni numero di persone', 'it holds for any number of people')],
+      fonte: P.fonte('grinstead', 'section 6.1, Example 6.8'),
+    };
+  }
+
+  // Year j is a new record with probability 1/j: expected records = 1 + 1/2 + … + 1/n
+  function record() {
+    const n = P.pick([5, 8, 10, 12, 20]);
+    let h = 0; for (let j = 1; j <= n; j++) h += 1 / j;
+    return {
+      testo: P.t(`I rendimenti annui di una strategia sono indipendenti e tutti diversi, con la stessa distribuzione. In ${n} anni, quanti anni ti aspetti che siano il migliore di sempre fino a quel momento (il primo anno conta)?`,
+        `A strategy's yearly returns are independent, all different, with the same distribution. Over ${n} years, how many years do you expect to be the best so far (the first year counts)?`),
+      nota: P.t('due decimali', 'two decimals'),
+      risposta: P.numero(h, { tol: 0.011, mostra: P.fmt(Math.round(h * 100) / 100) }),
+      suggerimenti: [
+        P.t('L\'anno j è un record se è il migliore dei primi j: per simmetria succede con probabilità 1/j.', 'Year j is a record if it is the best of the first j: by symmetry that happens with probability 1/j.'),
+        P.t(`Somma gli indicatori: 1 + 1/2 + … + 1/${n}.`, `Add the indicators: 1 + 1/2 + … + 1/${n}.`),
+      ],
+      soluzione: [`1 + 1/2 + … + 1/${n} = ${P.fmt(Math.round(h * 100) / 100)}`, P.t(`circa ln ${n} + 0.58`, `about ln ${n} + 0.58`)],
+      fonte: P.fonte('grinstead', 'section 6.1, Example 6.11'),
+    };
+  }
+
   P.trucco({
     id: 'prob-valore-atteso',
     materia: 'probabilita',
@@ -186,8 +275,20 @@
       it: 'E[X + Y] = E[X] + E[Y] sempre, anche senza indipendenza (dado 3.5; carta 7). Conteggi: somma di indicatori, ognuno vale la sua probabilità. Prodotto: solo con indipendenza. Attesa per un evento di probabilità p: 1/p prove.',
       en: 'E[X + Y] = E[X] + E[Y] always, even without independence (die 3.5; card 7). Counts: a sum of indicators, each worth its probability. Products: only with independence. Waiting for an event of probability p: 1/p trials.',
     },
+    fonti: [
+      P.fonte('crack', 'Question 4.1'),
+      P.fonte('crack', 'Question 1.36'),
+      P.fonte('zhou', '§4.5, "Connecting noodles"'),
+      P.fonte('zhou', '§4.5, "Coupon collection"', { nota: { it: 'la collezione completa, con la stessa somma a tappe', en: 'the full collection, with the same sum in stages' } }),
+      P.fonte('grinstead', 'section 6.1, Example 6.8', { nota: { it: 'i punti fissi di una permutazione a caso', en: 'the fixed points of a random permutation' } }),
+      P.fonte('grinstead', 'section 6.1, Example 6.11', { nota: { it: 'quanti record in n anni', en: 'how many records in n years' } }),
+    ],
     test: false,
     nomiLivelli: { it: ['Linearità', 'Mercati', 'Attese'], en: ['Linearity', 'Markets', 'Waiting times'] },
-    livelli: [sommaDadi, mercato, attesa],
+    livelli: [
+      sommaDadi,
+      () => P.pesato([[0.55, mercato], [0.25, compleanni], [0.2, badge]])(),
+      () => P.pesato([[0.35, attesa], [0.3, collezione], [0.15, spaghetti], [0.2, record]])(),
+    ],
   });
 })();

@@ -69,6 +69,7 @@
         `K ${su ? '+' : '−'} ${f2(st)}.`,
       ],
       soluzione: [P.t(`break-even: ${S} ${su ? '+' : '−'} ${f2(st)} = ${f2(v)}`, `break-even: ${S} ${su ? '+' : '−'} ${f2(st)} = ${f2(v)}`)],
+      fonte: P.fonte('crack', 'Question 2.24'),
     };
   }
 
@@ -142,8 +143,12 @@
       it: 'Straddle ATM ≈ 0.8 × σ × S × √T = movimento assoluto atteso. Un giorno: σ × S / 20. Vol implicita ≈ straddle / (0.8 × S × √T). Break-even a scadenza: K ± prezzo. Prezzo / S = la mossa prezzata.',
       en: 'ATM straddle ≈ 0.8 × σ × S × √T = expected absolute move. One day: σ × S / 20. Implied vol ≈ straddle / (0.8 × S × √T). Break-evens at expiry: K ± price. Price / S = the priced move.',
     },
+    fonti: [
+      P.fonte('zhou', '§6.3, "Straddle"', { nota: { it: 'che cos\'è e quando comprarlo; c ≈ p ≈ 0.4σS√T', en: 'what it is and when to buy one; c ≈ p ≈ 0.4σS√T' } }),
+      P.fonte('crack', 'Question 2.24'),
+    ],
     test: false,
     nomiLivelli: { it: ['Prezzo', 'La mossa', 'Vol implicita'], en: ['Price', 'The move', 'Implied vol'] },
-    livelli: [prezzo, mossa, volImplicita],
+    livelli: [P.conFonte(prezzo, P.fonte('zhou', '§6.3, "Straddle"', { nota: { it: 'che cos\'è e quando comprarlo; c ≈ p ≈ 0.4σS√T', en: 'what it is and when to buy one; c ≈ p ≈ 0.4σS√T' } })), mossa, volImplicita],
   });
 })();

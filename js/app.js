@@ -54,7 +54,7 @@
     ripasso: '<path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/>',
     test: '<circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 2.5M9.5 2.5h5"/>',
     debole: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17v.5"/>',
-    risorse: '<path d="M5 4h4v16H5zM10 4h4v16h-4z"/><path d="M15.5 5.2l3.8-1 3.7 15.5-3.8 1z"/>',
+    rompicapi: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.4 1.1 2.2h5c0-.8.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/>',
     schede: '<rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 8h8M8 12h8M8 16h5"/>',
   };
   const icona = (k, cls = 'icona') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONE[k]}</svg>`;
@@ -65,16 +65,17 @@
 
   // ---------- testata e rotte ----------
 
-  function testata(nome) {
+  function testata(nome, arg) {
     const voci = [
       ['', t('Programma', 'Programme')],
+      ['materia/rompicapi', t('Brain teaser', 'Brain teasers')],
       ['allenamento', t('Allenamento', 'Practice')],
       ['ripasso', t('Ripasso', 'Review')],
       ['test', t('Test a tempo', 'Timed test')],
-      ['risorse', t('Risorse', 'Library')],
       ['registro', t('Registro', 'Log')],
     ];
-    const attiva = nome === 'trucco' || nome === 'schede' ? '' : nome;
+    const inRompicapi = (nome === 'materia' && arg === 'rompicapi') || (nome === 'trucco' && P.trovaTrucco(arg) && P.trovaTrucco(arg).materia === 'rompicapi');
+    const attiva = inRompicapi ? 'materia/rompicapi' : nome === 'trucco' || nome === 'schede' || nome === 'materia' ? '' : nome;
     document.getElementById('nav').innerHTML = voci.map(([r, l]) =>
       `<a href="#/${r}" class="${r === attiva ? 'attivo' : ''}"${r === attiva ? ' aria-current="page"' : ''}>${l}${r === 'ripasso' ? ' <span class="conta" id="conta-ripasso" hidden></span>' : ''}</a>`).join('');
     document.querySelectorAll('.lingue button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lingua === P.lingua)));
@@ -91,7 +92,7 @@
         <p>${t('Esercizi per i colloqui di trading, un trucco alla volta. Gratis, senza account, codice aperto.', 'Drills for trading interviews, one trick at a time. Free, no account, open source.')}</p></div>
       <nav class="piede-link" aria-label="${t('Altre pagine', 'More pages')}">
         <a href="#/schede">${t('Formulario', 'Cheat sheet')}</a>
-        <a href="#/risorse">${t('Risorse', 'Library')}</a>
+        <a href="#/materia/rompicapi">${t('Brain teaser', 'Brain teasers')}</a>
         <a href="#/perche">${t('Perché esiste', 'About')}</a>
         <a href="https://github.com/ThePowerSet/palestra" target="_blank" rel="noopener">GitHub</a>
         <a href="https://thepowerset.github.io/" target="_blank" rel="noopener">thepowerset.github.io</a>
@@ -120,7 +121,7 @@
     aggiornaTema();
   }
 
-  const rotte = { '': home, trucco: lezione, allenamento: confAllenamento, ripasso: confRipasso, test: confTest, registro, sessione, accedi, perche, risorse, schede };
+  const rotte = { '': home, trucco: lezione, allenamento: confAllenamento, ripasso: confRipasso, test: confTest, registro, sessione, accedi, perche, schede, materia };
 
   const rotta = () => location.hash.replace(/^#\/?/, '').split('/');
 
@@ -132,7 +133,7 @@
   // ridisegna la pagina dov'è, senza tornare in cima (serve quando arrivano dati da un altro dispositivo)
   function ridisegna() {
     const [nome = '', arg] = rotta();
-    testata(nome);
+    testata(nome, arg ? decodeURIComponent(arg) : undefined);
     (rotte[nome] || home)(arg ? decodeURIComponent(arg) : undefined);
     aggiornaConta();
   }
@@ -205,7 +206,7 @@
     let h = `
       <section class="eroe">
         <div class="eroe-sfondo" aria-hidden="true">${cono}</div>
-        <span class="kicker">${t('Colloqui di trading · calcolo, opzioni, probabilità, tassi', 'Trading interviews · mental maths, options, probability, rates')}</span>
+        <span class="kicker">${t('Colloqui di trading · calcolo, opzioni, probabilità, tassi, brain teaser', 'Trading interviews · mental maths, options, probability, rates, brain teasers')}</span>
         <h1>${t('I numeri che un desk ti chiede, <em>un trucco alla volta</em>.', 'The numbers a desk asks for, <em>one trick at a time</em>.')}</h1>
         <p class="lead">${t('Ogni trucco ha una lezione breve, domande generate a caso su tre livelli con i suggerimenti, e torna nel ripasso finché non è tuo. Poi lo metti alla prova a tempo.',
           'Each trick has a short lesson, random questions on three levels with hints, and comes back in review until it sticks. Then you test it against the clock.')}</p>
@@ -226,21 +227,41 @@
       <section class="blocco">
         <div class="blocco-testa"><span class="kicker">${t('Programma', 'Programme')}</span><h2>${t('Tutti i trucchi', 'Every trick')}</h2>
           <p class="mini">${t('I tre puntini sono i livelli: pieno quando sei sopra l\'80% nelle ultime dieci risposte.', 'The three dots are the levels: filled once you are above 80% in the last ten answers.')} <a href="#/schede">${t('Tutte le schede in una pagina →', 'Every summary on one page →')}</a></p></div>`;
-    for (const m of P.materie) {
-      const lista = P.trucchiDi(m.id);
-      if (!lista.length) continue;
-      const fatti = lista.filter(x => P.dati.imparati[x.id]).length;
-      h += `<section class="materia" id="materia-${m.id}"><div class="materia-testa"><div><h3>${esc(tr(m.titolo))}</h3><p>${esc(tr(m.descrizione))}</p></div>
-        <div class="materia-stato"><span class="mini">${fatti}/${lista.length} ${t('imparati', 'learnt')}</span>${barra(fatti / lista.length)}</div></div>`;
-      for (const c of m.capitoli) {
-        const tc = P.trucchiDi(m.id, c.id);
-        if (tc.length) h += `${m.capitoli.length > 1 ? `<h4 class="capitolo">${esc(tr(c.titolo))}</h4>` : ''}<ul class="trucchi">${tc.map(rigaTrucco).join('')}</ul>`;
-      }
-      h += '</section>';
-    }
-    h += '</section>';
+    h += P.materie.map(m => sezioneMateria(m)).join('') + '</section>';
     vista.innerHTML = h;
     vista.querySelectorAll('[data-allena]').forEach(b => { b.onclick = () => allenaTrucco(P.trovaTrucco(b.dataset.allena)); });
+  }
+
+  // one subject with its chapters and tricks; on its own page the title is already the page heading
+  function sezioneMateria(m, sola = false) {
+    const lista = P.trucchiDi(m.id);
+    if (!lista.length) return '';
+    const fatti = lista.filter(x => P.dati.imparati[x.id]).length;
+    let h = `<section class="materia" id="materia-${m.id}"><div class="materia-testa"><div>${sola ? '' : `<h3><a href="#/materia/${m.id}">${esc(tr(m.titolo))}</a></h3><p>${esc(tr(m.descrizione))}</p>`}</div>
+        <div class="materia-stato"><span class="mini">${fatti}/${lista.length} ${t('imparati', 'learnt')}</span>${barra(fatti / lista.length)}</div></div>`;
+    for (const c of m.capitoli) {
+      const tc = P.trucchiDi(m.id, c.id);
+      if (tc.length) h += `${m.capitoli.length > 1 ? `<h4 class="capitolo">${esc(tr(c.titolo))}</h4>` : ''}<ul class="trucchi">${tc.map(rigaTrucco).join('')}</ul>`;
+    }
+    return h + '</section>';
+  }
+
+  // A subject on its own page (the Brain teaser link in the header opens one). The mixed round hides the
+  // technique until you have answered, as in an interview, where nobody says which trick a puzzle needs.
+  function materia(id) {
+    const m = P.trovaMateria(id);
+    if (!m || !P.trucchiDi(id).length) return home();
+    const lista = P.trucchiDi(id);
+    vista.innerHTML = `<section class="largo">
+      <div class="blocco-testa"><span class="kicker">${t('Materia', 'Subject')}</span><h1>${esc(tr(m.titolo))}</h1>
+        ${m.intro ? `<p class="lead">${esc(tr(m.intro))}</p>` : ''}
+        <div class="azioni-lezione"><button class="primario" data-azione="misto">${t('Giro misto: 10 domande, tecnica nascosta', 'Mixed round: 10 questions, technique hidden')}</button></div></div>
+      ${sezioneMateria(m, true)}
+    </section>`;
+    vista.querySelector('[data-azione="misto"]').onclick = () => avvia({
+      modalita: 'casuale', titolo: m.titolo, totale: 10, aiuti: true, subito: true, ritorno: `#/materia/${id}`,
+      prossima: () => ({ trucco: P.pick(lista), livello: P.pesato([[0.3, 0], [0.4, 1], [0.3, 2]]) }),
+    });
   }
 
   function rigaTrucco(trucco) {
@@ -280,7 +301,7 @@
       <div class="testo-lezione">${tr(trucco.lezione)}</div>
       ${lab ? '<section class="lab" id="lab"></section>' : ''}
       <div class="scheda"><span class="etichetta">${t('In breve', 'In short')}</span><p>${esc(tr(trucco.scheda))}</p></div>
-      ${letture(trucco)}
+      ${fontiLezione(trucco)}
       ${bottoni}
       <nav class="vicini">${prec ? `<a href="#/trucco/${prec.id}"><span class="mini">← ${t('Precedente', 'Previous')}</span>${esc(tr(prec.titolo))}</a>` : '<span></span>'}${succ ? `<a class="dopo" href="#/trucco/${succ.id}"><span class="mini">${t('Successivo', 'Next')} →</span>${esc(tr(succ.titolo))}</a>` : ''}</nav>
     </article>`;
@@ -455,6 +476,7 @@
         <p class="verdetto">${verdetto}<span class="mini"> · ${sec(v.secondi)}${nAiuti}</span></p>
         ${v.esito !== 'giusta' ? `<p class="giusta">${t('La risposta è', 'The answer is')} <b>${esc(P.mostraRisposta(r))}</b>${r.unita ? ' ' + esc(r.unita) : ''}</p>` : ''}
         <ol class="passi">${(q.soluzione || []).map(s => `<li>${esc(s)}</li>`).join('')}</ol>
+        ${q.fonte ? `<p class="fonte-domanda">${t('Fonte', 'Source')}: ${fonteHtml(q.fonte)}</p>` : ''}
         <button class="primario" id="avanti">${ultima ? t('Vedi il riepilogo', 'See the summary') : t('Avanti', 'Next')} <kbd>${t('Invio', 'Enter')}</kbd></button>
       </div>` : '';
 
@@ -545,7 +567,7 @@
       const risp = v.esito === 'giusta' ? esc(v.risposta) : `${v.risposta ? `<s>${esc(v.risposta)}</s> ` : ''}${esc(giusta)}`;
       return `<li class="${v.esito}"><details><summary>
         <span class="segno">${segno[v.esito]}</span><span class="q">${esc(piano(v.q.testo))}</span><span class="r">${risp}</span><span class="s">${sec(v.secondi)}${v.aiuti ? ' · ' + v.aiuti + ' ' + t('sugg.', 'hints') : ''}</span>
-      </summary><ol class="passi">${(v.q.soluzione || []).map(s => `<li>${esc(s)}</li>`).join('')}</ol></details></li>`;
+      </summary><ol class="passi">${(v.q.soluzione || []).map(s => `<li>${esc(s)}</li>`).join('')}</ol>${v.q.fonte ? `<p class="fonte-domanda">${t('Fonte', 'Source')}: ${fonteHtml(v.q.fonte)}</p>` : ''}</details></li>`;
     };
     vista.innerHTML = `<section class="riepilogo">
       <p class="briciole">${esc(tr(S.titolo))}</p>
@@ -822,111 +844,38 @@
     vista.innerHTML = h + '</section>';
   }
 
-  // ---------- library: free material found on the open web (contenuti/risorse.js) ----------
+  // ---------- sources: the book or official page each problem was adapted from (contenuti/fonti.js) ----------
 
-  const ARGOMENTI = {
-    'options': due('Opzioni', 'Options'), 'greeks': due('Greche', 'Greeks'), 'volatility': due('Volatilità', 'Volatility'),
-    'probability': due('Probabilità', 'Probability'), 'brainteasers': due('Rompicapi', 'Brainteasers'), 'market-making': due('Market making', 'Market making'),
-    'estimation': due('Stime', 'Estimation'), 'mental-maths': due('Calcolo mentale', 'Mental maths'), 'statistics': due('Statistica', 'Statistics'),
-    'rates': due('Tassi e bond', 'Rates and bonds'), 'credit': due('Credito', 'Credit'), 'microstructure': due('Microstruttura', 'Microstructure'),
-    'programming': due('Programmazione', 'Programming'), 'interview-prep': due('Colloqui', 'Interviews'),
-  };
-  const TIPI = {
-    notes: due('Dispense', 'Notes'), course: due('Corso', 'Course'), video: due('Video', 'Video'), book: due('Libro', 'Book'), article: due('Articolo', 'Article'),
-    paper: due('Paper', 'Paper'), tool: due('Strumento', 'Tool'), puzzles: due('Problemi', 'Puzzles'), podcast: due('Podcast', 'Podcast'), newsletter: due('Newsletter', 'Newsletter'),
-  };
-  const LIVELLI_RISORSE = due(['Per cominciare', 'Dopo le basi', 'Per approfondire'], ['Start here', 'Once the basics are in', 'Going deeper']);
-  const filtro = { argomento: '', livello: 0, testo: '' };
-  // the ten to start from (the research's own ranking, firm pages left out), shown first with a mark
-  const CONSIGLIATE = ['grinstead-snell-probability', 'mit-6-041sc-probability', 'brainstellar-puzzles', 'winkler-mathematical-puzzles-revised',
-    'oic-put-call-parity', 'oic-understanding-options-greeks', 'gundersen-atm-approximation', 'bennett-trading-volatility', 'zetamac-arithmetic', 'lesswrong-fermi-estimates'];
-  // what to read after each lesson: ids from contenuti/risorse.js
-  const LETTURE = {
-    'frazioni-2-5': ['treasurydirect-understanding-pricing', 'zetamac-arithmetic'],
-    'desk-regola-16': ['oic-rule-of-16', 'macroption-rule-of-16'],
-    'desk-atm': ['gundersen-atm-approximation', 'oic-understanding-options-greeks'],
-    'opz-parita': ['oic-put-call-parity', 'hull-options-futures-derivatives'],
-    'opz-straddle': ['gundersen-atm-approximation', 'bennett-trading-volatility'],
-    'opz-digitale': ['haugh-foundations-financial-engineering', 'hull-options-futures-derivatives'],
-    'opz-delta': ['oic-understanding-options-greeks', 'eurex-trading-strategies'],
-    'opz-gamma-theta': ['moontower-approximating-gamma', 'sinclair-volatility-trading', 'taleb-dynamic-hedging'],
-    'opz-vega': ['oic-understanding-options-greeks', 'sinclair-volatility-trading'],
-    'opz-vol-forward': ['bennett-trading-volatility', 'cboe-vix-methodology'],
-    'opz-pnl-greche': ['oic-understanding-options-greeks', 'taleb-dynamic-hedging'],
-    'seq-differenze': ['oeis'],
-    'prob-valore-atteso': ['grinstead-snell-probability', 'brainstellar-puzzles'],
-    'prob-bayes': ['three-blue-one-brown-bayes', 'mit-6-041sc-probability'],
-    'prob-rilancio': ['brainstellar-puzzles', 'winkler-mathematical-puzzles-revised'],
-    'prob-kelly': ['thorp-kelly-criterion'],
-    'tassi-dv01': ['tuckman-serrat-fixed-income', 'ftse-russell-carry-concept'],
-    'tassi-cds': ['isda-standard-cds-examples', 'berd-credit-term-structures', 'hull-white-valuing-cds'],
-  };
-  const letture = trucco => {
-    const ids = LETTURE[trucco.id] || (trucco.materia === 'calcolo' ? ['zetamac-arithmetic'] : []);
-    const rr = ids.map(id => (P.risorse || []).find(r => r.id === id)).filter(Boolean);
-    if (!rr.length) return '';
-    return `<section class="approfondire"><span class="etichetta">${t('Per approfondire', 'Go further')}</span><ul>${rr.map(r => `<li>
-      <a href="${esc(r.url)}" target="_blank" rel="noopener noreferrer">${esc(r.title)}</a>
-      <span class="mini">${esc(r.publisher || r.author)}${r.free ? '' : ' · ' + t('a pagamento', 'paid')}</span>
-      ${r.start_here ? `<span class="parti">${esc(tr(r.start_here))}</span>` : ''}</li>`).join('')}</ul>
-      <a class="mini" href="#/risorse">${t('Tutte le risorse →', 'The whole library →')}</a></section>`;
+  const fonteHtml = f => {
+    const o = P.opere[f.opera];
+    if (!o) return esc(f.dove);
+    const url = f.url || o.url;
+    const titolo = url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer"><cite>${esc(o.titolo)}</cite></a>` : `<cite>${esc(o.titolo)}</cite>`;
+    return `${esc(o.autore)}, ${titolo}${o.dettagli ? ` (${esc(o.dettagli)})` : ''}${f.dove ? `, ${esc(f.dove)}` : ''}`;
   };
 
-  function risorse() {
-    const tutte = P.risorse || [];
-    const conta = {};
-    tutte.forEach(r => r.topics.forEach(k => { conta[k] = (conta[k] || 0) + 1; }));
-    const argomenti = Object.keys(ARGOMENTI).filter(k => conta[k]);
-    vista.innerHTML = `<section class="largo">
-      <div class="blocco-testa"><span class="kicker">${t('Risorse', 'Library')}</span><h1>${t('Da leggere, guardare e risolvere', 'To read, watch and solve')}</h1>
-        <p class="lead">${t('Materiale gratuito trovato sul web aperto, scelto per i colloqui di trading e quant: corsi, dispense, strumenti e problemi. Ogni scheda dice perché vale il tempo e da dove cominciare.',
-          'Free material from the open web, chosen for trading and quant interviews: courses, notes, tools and problems. Each card says why it is worth the time and where to start.')}</p></div>
-      <div class="filtri">
-        <input type="search" id="filtro-testo" placeholder="${t('Cerca per titolo, autore, argomento', 'Search by title, author, topic')}" value="${esc(filtro.testo)}" aria-label="${t('Cerca', 'Search')}">
-        <div class="pillole" role="group" aria-label="${t('Argomento', 'Topic')}">
-          <button type="button" class="pill" data-arg="" aria-pressed="${!filtro.argomento}">${t('Tutti', 'All')} <span>${tutte.length}</span></button>
-          ${argomenti.map(k => `<button type="button" class="pill" data-arg="${k}" aria-pressed="${filtro.argomento === k}">${esc(tr(ARGOMENTI[k]))} <span>${conta[k]}</span></button>`).join('')}
-        </div>
-        <div class="pillole" role="group" aria-label="${t('Livello', 'Level')}">
-          <button type="button" class="pill" data-liv="0" aria-pressed="${!filtro.livello}">${t('Ogni livello', 'Any level')}</button>
-          ${tr(LIVELLI_RISORSE).map((l, k) => `<button type="button" class="pill" data-liv="${k + 1}" aria-pressed="${filtro.livello === k + 1}">${l}</button>`).join('')}
-        </div>
-      </div>
-      <p class="mini" id="conteggio" role="status"></p>
-      <div class="risorse" id="elenco-risorse"></div>
-      <p class="mini nota-risorse">${t('Link esterni, controllati quando sono stati aggiunti. Niente qui è affiliato o sponsorizzato.', 'External links, checked when they were added. Nothing here is affiliated or sponsored.')}</p>
-    </section>`;
-    const elenco = document.getElementById('elenco-risorse');
-    const dominio = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return ''; } };
-    const carta = r => `<article class="risorsa">
-        <div class="risorsa-testa"><span class="tipo">${esc(tr(TIPI[r.type] || due(r.type, r.type)))}${CONSIGLIATE.includes(r.id) ? ` · <b class="consigliata">${t('da cui partire', 'start here')}</b>` : ''}</span><span class="liv l${r.level}" title="${esc(tr(LIVELLI_RISORSE)[r.level - 1] || '')}">${'●'.repeat(r.level)}${'○'.repeat(3 - r.level)}</span></div>
-        <h3><a href="${esc(r.url)}" target="_blank" rel="noopener noreferrer">${esc(r.title)}</a></h3>
-        <p class="chi">${esc([r.author, r.publisher].filter(Boolean).join(' · '))}</p>
-        <p>${esc(tr(r.why))}</p>
-        ${r.start_here && tr(r.start_here) ? `<p class="parti"><span class="etichetta">${t('Da dove partire', 'Start with')}</span>${esc(tr(r.start_here))}</p>` : ''}
-        <div class="risorsa-piede">${r.topics.map(k => `<span class="tag">${esc(tr(ARGOMENTI[k] || due(k, k)))}</span>`).join('')}${r.free ? '' : `<span class="tag a-pagamento">${t('a pagamento', 'paid')}</span>`}<span class="dominio">${esc(dominio(r.url))} ↗</span></div>
-      </article>`;
-    const mostra = () => {
-      const parole = filtro.testo.toLowerCase().split(/\s+/).filter(Boolean);
-      const scelte = tutte.filter(r => (!filtro.argomento || r.topics.includes(filtro.argomento)) && (!filtro.livello || r.level === filtro.livello)
-        && parole.every(p => [r.title, r.author, r.publisher, tr(r.why), r.topics.map(k => tr(ARGOMENTI[k] || '')).join(' ')].join(' ').toLowerCase().includes(p)))
-        .sort((a, b) => {
-          const ca = CONSIGLIATE.indexOf(a.id), cb = CONSIGLIATE.indexOf(b.id);
-          if (ca >= 0 || cb >= 0) return (ca < 0 ? 99 : ca) - (cb < 0 ? 99 : cb);
-          return a.level - b.level || (a.free === b.free ? 0 : a.free ? -1 : 1);
-        });
-      elenco.innerHTML = scelte.map(carta).join('') || `<p class="mini">${t('Nessuna risorsa con questi filtri.', 'No resources match these filters.')}</p>`;
-      document.getElementById('conteggio').textContent = t(`${scelte.length} risorse`, `${scelte.length} resources`);
+  // one line per work, with every place in it that the trick's problems come from
+  function fontiLezione(trucco) {
+    const ff = trucco.fonti || [];
+    if (!ff.length) return '';
+    const opere = [];
+    for (const f of ff) {
+      let g = opere.find(x => x.opera === f.opera);
+      if (!g) opere.push(g = { opera: f.opera, posti: [] });
+      g.posti.push(f);
+    }
+    const riga = g => {
+      const o = P.opere[g.opera];
+      const posti = g.posti.map(f => {
+        const dove = f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener noreferrer">${esc(f.dove)}</a>` : esc(f.dove);
+        return `<span class="posto">${dove}${f.nota ? ` <span class="mini">(${esc(tr(f.nota))})</span>` : ''}</span>`;
+      }).join('');
+      return `<li>${fonteHtml({ opera: g.opera, dove: '' })}${posti}</li>`;
     };
-    const campo = document.getElementById('filtro-testo');
-    campo.oninput = () => { filtro.testo = campo.value; mostra(); };
-    vista.querySelectorAll('[data-arg]').forEach(b => {
-      b.onclick = () => { filtro.argomento = b.dataset.arg; vista.querySelectorAll('[data-arg]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); mostra(); };
-    });
-    vista.querySelectorAll('[data-liv]').forEach(b => {
-      b.onclick = () => { filtro.livello = +b.dataset.liv; vista.querySelectorAll('[data-liv]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); mostra(); };
-    });
-    mostra();
+    return `<section class="fonti"><span class="etichetta">${t('Da dove vengono i problemi', 'Where the problems come from')}</span>
+      <ul>${opere.map(riga).join('')}</ul>
+      <p class="mini">${t('Gli esercizi sono riscritti con parole e numeri nostri: la fonte dice dove trovare il problema originale e la sua soluzione.',
+        'The exercises are rewritten in our own words and numbers: the source says where to find the original problem and its solution.')}</p></section>`;
   }
 
   // ---------- registro ----------

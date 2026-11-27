@@ -146,8 +146,11 @@
       it: 'Si parte dalla fine: tieni solo ciò che batte il valore di continuare. Dado da 6: 3.5 → un rilancio 4.25 (tieni 4+) → due rilanci 14/3 ≈ 4.67 (tieni 5+). Dado da n, un rilancio: tieni sopra (n + 1)/2.',
       en: 'Start from the end: keep only what beats the value of carrying on. Six-sided die: 3.5 → one re-roll 4.25 (keep 4+) → two re-rolls 14/3 ≈ 4.67 (keep 5+). n-sided die, one re-roll: keep above (n + 1)/2.',
     },
+    fonti: [
+      P.fonte('crack', 'Question 4.8', { nota: { it: 'tre lanci di un dado, fermandosi quando conviene', en: 'three rolls of a die, stopping when it pays' } }),
+    ],
     test: false,
     nomiLivelli: { it: ['Un rilancio', 'Due rilanci', 'Prezzo e soglia'], en: ['One re-roll', 'Two re-rolls', 'Price and threshold'] },
-    livelli: [unRilancio, dueRilanci, prezzo],
+    livelli: [unRilancio, P.conFonte(dueRilanci, P.fonte('crack', 'Question 4.8', { nota: { it: 'tre lanci di un dado, fermandosi quando conviene', en: 'three rolls of a die, stopping when it pays' } })), prezzo],
   });
 })();

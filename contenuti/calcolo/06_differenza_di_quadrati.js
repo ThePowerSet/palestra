@@ -133,6 +133,7 @@
       it: '(m − d)(m + d) = m² − d²: media e distanza, poi quadrato meno quadrato. Somma dispari: sposta di uno e correggi. Su e giù del x%: −x².',
       en: '(m − d)(m + d) = m² − d²: midpoint and distance, then square minus square. Odd sum: shift by one and correct. Up and down by x%: −x².',
     },
+    fonti: [P.fonte('crack', 'Question 1.88', { nota: { it: 'la stessa domanda, 21 × 19', en: 'the same question, 21 × 19' } })],
     test: true,
     nomiLivelli: { it: ['Simmetrici', 'Quadrati in 5 e rendimenti', 'Asimmetrici'], en: ['Symmetric', 'Squares ending in 5 and returns', 'Asymmetric'] },
     livelli: [

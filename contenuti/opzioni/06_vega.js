@@ -120,6 +120,10 @@
       it: 'Vega ATM ≈ 0.004 × S × √T per punto. Call e put stesso strike: stesso vega; straddle: il doppio. P&L = vega × punti × azioni. Prezzo ATM proporzionale alla vol. Vega ∝ √T: per neutralizzare, rapporto √(T₁/T₂).',
       en: 'ATM vega ≈ 0.004 × S × √T per point. Call and put, same strike: same vega; straddle: double. P&L = vega × points × shares. ATM price proportional to vol. Vega ∝ √T: to neutralise, ratio √(T₁/T₂).',
     },
+    fonti: [
+      P.fonte('zhou', '§6.2, "Vega"', { nota: { it: 'la teoria: vega at-the-money e come cambia con il tempo', en: 'the theory: at-the-money vega and how it changes with time' } }),
+      P.fonte('crack', 'Question 2.21', { nota: { it: 'lo stesso effetto del tempo sul prezzo', en: 'the same effect of time on price' } }),
+    ],
     test: false,
     nomiLivelli: { it: ['Vega', 'P&L', 'Vega neutrale'], en: ['Vega', 'P&L', 'Vega neutral'] },
     livelli: [vega, pnl, vegaNeutrale],

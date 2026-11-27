@@ -97,6 +97,29 @@
     [{ it: '1 mese', en: '1 month' }, { it: '1 settimana (circa un quarto di mese)', en: '1 week (about a quarter of a month)' }, 0.5],
   ];
 
+  // Zero vol: the stock grows at the riskless rate for sure, so the ATM call is worth S − K e^(−rT) = S (1 − e^(−rT))
+  function volZero() {
+    const S = P.pick([50, 100, 100, 200]), r = P.pick([2, 3, 4, 5, 6]), T = P.pick([0.5, 1, 1, 2]);
+    const v = S * (1 - Math.exp(-r / 100 * T));
+    const nomeT = T === 1 ? P.t('un anno', 'one year') : T === 2 ? P.t('due anni', 'two years') : P.t('sei mesi', 'six months');
+    return {
+      testo: P.t(`Black-Scholes, niente dividendi. Titolo a ${S}, tasso ${r}% annuo composto in continuo, call europea at-the-money a ${nomeT}. Se la volatilità è zero, quanto vale la call?`,
+        `Black-Scholes, no dividends. Stock at ${S}, rate ${r}% a year compounded continuously, at-the-money European call expiring in ${nomeT}. If volatility is zero, what is the call worth?`),
+      nota: P.t('due decimali', 'two decimals'),
+      risposta: P.numero(v, { tol: 0.03, mostra: P.fmt(Math.round(v * 100) / 100) }),
+      suggerimenti: [
+        P.t('Senza volatilità il titolo cresce al tasso senza rischio, con certezza: a scadenza vale S × e^(rT), sopra lo strike.', 'With no volatility the stock grows at the riskless rate, for sure: at expiry it is worth S × e^(rT), above the strike.'),
+        P.t(`La call paga S e^(rT) − K con certezza; scontata vale S − K e^(−rT) = ${S} × (1 − e^(−${P.fmt(r / 100 * T)})).`, `The call pays S e^(rT) − K for sure; discounted it is worth S − K e^(−rT) = ${S} × (1 − e^(−${P.fmt(r / 100 * T)})).`),
+      ],
+      soluzione: [
+        `e^(−${P.fmt(r / 100 * T)}) ≈ ${P.fmt(Math.exp(-r / 100 * T), 4)}`,
+        `${S} × (1 − ${P.fmt(Math.exp(-r / 100 * T), 4)}) = ${P.fmt(Math.round(v * 100) / 100)}`,
+        P.t('chi l\'ha venduta si copre comprando un\'azione e prendendo a prestito K e^(−rT)', 'whoever sold it hedges by buying one share and borrowing K e^(−rT)'),
+      ],
+      fonte: P.fonte('crack', 'Question 2.1'),
+    };
+  }
+
   function tempo() {
     const [a, b, k] = P.pick(COPPIE), t1 = P.tr(a), t2 = P.tr(b), C = P.pick([1.5, 2, 2.5, 3, 4, 6]), v = C * k;
     return {
@@ -111,6 +134,7 @@
         P.t(`rapporto dei tempi: ${P.fmt(k * k)}, radice ${P.fmt(k)}`, `ratio of the times: ${P.fmt(k * k)}, square root ${P.fmt(k)}`),
         `${P.fmt(C)} × ${P.fmt(k)} = ${P.fmt(v)}`,
       ],
+      fonte: P.fonte('crack', 'Question 2.21'),
     };
   }
 
@@ -176,10 +200,16 @@
       it: 'Call ATM ≈ 0.4 × S × σ × √T (0.4 ≈ 1/√(2π)). Straddle ≈ 0.8 × S × σ × √T, ed è anche il movimento di pareggio. σ ≈ C / (0.4 S √T). Vega per punto ≈ 0.4 S √T / 100. Prezzo ∝ √T.',
       en: 'ATM call ≈ 0.4 × S × σ × √T (0.4 ≈ 1/√(2π)). Straddle ≈ 0.8 × S × σ × √T, which is also the breakeven move. σ ≈ C / (0.4 S √T). Vega per point ≈ 0.4 S √T / 100. Price ∝ √T.',
     },
+    fonti: [
+      P.fonte('zhou', '§6.3, "Straddle"', { nota: { it: 'la stessa approssimazione, c ≈ p ≈ 0.4σS√T', en: 'the same approximation, c ≈ p ≈ 0.4σS√T' } }),
+      P.fonte('crack', 'Question 2.1'),
+      P.fonte('crack', 'Question 2.21'),
+      P.fonte('crack', 'Question 2.18', { nota: { it: 'la stessa radice del tempo, da uno a quattro anni', en: 'the same square root of time, from one to four years' } }),
+    ],
     test: false,
     nomiLivelli: { it: ['Call', 'Straddle e vol implicita', 'Vega e tempo'], en: ['Call', 'Straddle and implied vol', 'Vega and time'] },
     livelli: [
-      call,
+      () => (P.chance(0.75) ? P.conFonte(call, P.fonte('zhou', '§6.3, "Straddle"', { nota: { it: 'la stessa approssimazione, c ≈ p ≈ 0.4σS√T', en: 'the same approximation, c ≈ p ≈ 0.4σS√T' } }))() : volZero()),
       () => P.pesato([[0.5, straddle], [0.5, volImplicita]])(),
       () => P.pesato([[0.5, vega], [0.5, tempo]])(),
     ],

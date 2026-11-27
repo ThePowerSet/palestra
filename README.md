@@ -1,6 +1,6 @@
 # Palestra
 
-Drills for trading interviews, one trick at a time: mental maths, desk numbers, options and Greeks, probability. Each trick has a short lesson, exercises generated at random on three levels with a hint for every question, and a worked solution; some lessons end with a small interactive chart. Then you mix them: random practice, spaced review, timed tests. It opens in English, and every text also has an Italian version.
+Drills for trading interviews, one trick at a time: mental maths, desk numbers, options and Greeks, probability, rates and credit, brain teasers. Each trick has a short lesson, exercises generated at random on three levels with a hint for every question, and a worked solution; some lessons end with a small interactive chart. Most problems are adapted from well-known interview books and official documents (exchanges, the US Treasury, central banks, ISDA, university courses), rewritten with new numbers, and each one says where the original is. Then you mix them: random practice, spaced review, timed tests. It opens in English, and every text also has an Italian version.
 
 **Use it:** https://palestra-opal.vercel.app (no account, nothing to install)
 
@@ -24,7 +24,8 @@ The timed test follows the style of the mental maths tests used in trading recru
 | Timed test | Ten questions a minute for 2, 5, 8, 10 or 15 minutes, with or without a penalty (+1 if right, −1 if wrong, 0 if skipped). No hints, marking at the end. See "About the timed test" above |
 | Log | Per trick: answers, accuracy, average time, how often you opened a hint. Timed-test scores over time, recent sessions, CSV export |
 | Cheat sheet | The "In short" box of every trick on one page, to reread before an interview; it prints on paper |
-| Library | Free material from the open web (courses, notes, tools, problems), filtered by topic and level, each with why it is worth the time and where to start |
+| Brain teasers | The brain teaser subject on its own page, grouped by the idea that cracks each puzzle (work backwards, invariants, symmetry, the worst case, counting tests). "Mixed round" hides the technique until you answer |
+| Sources | Every lesson lists the books and documents its problems come from; after each answer the question shows its own source |
 
 Keys: Enter answers and moves on, `?` opens the next hint, 1–4 or A–D pick a multiple-choice option. Answers can be typed the way they come: `0.375`, `0,375`, `3/8`, `99-17`, `25000`, `25k`, `2.5m`, `−4%`.
 
@@ -68,6 +69,7 @@ Every text is written in both languages: `P.t('testo italiano', 'English text')`
         P.t('il primo passo già fatto', 'the first step, done'),
       ],
       soluzione: [P.t('passo 1', 'step 1'), P.t('passo 2', 'step 2')],
+      fonte: P.fonte('crack', 'Question 1.88'),               // optional: where this problem comes from
     };
   }
 
@@ -81,6 +83,7 @@ Every text is written in both languages: `P.t('testo italiano', 'English text')`
     aggancio: { it: 'La scena da colloquio o da desk.', en: 'The interview or desk scene.' },
     lezione: { it: `<h3>…</h3><p>…</p><div class="esempio">…</div><div class="trappola">…</div>`, en: `<h3>…</h3><p>…</p>` },
     scheda: { it: 'Tre righe da ripasso.', en: 'Three lines to review.' },
+    fonti: [P.fonte('crack', 'Question 1.88', { nota: { it: 'la stessa domanda', en: 'the same question' } })],
     test: true,                    // level 1 joins the timed test
     nomiLivelli: { it: ['Calcolo', 'Al desk', 'Un passo in più'], en: ['Calculation', 'On the desk', 'One step further'] },
     livelli: [calcolo, calcolo, calcolo],                      // three generators, one per level
@@ -92,13 +95,15 @@ Every text is written in both languages: `P.t('testo italiano', 'English text')`
 
 A new subject is one `Palestra.materia` call in `contenuti/materie.js` and a folder in `contenuti/`.
 
+Sources live in `contenuti/fonti.js`: each work (book or official page) once, with author, title, edition and, for web pages, the address. `P.fonte(work, place, { nota })` points to a place in it. A trick lists all its sources in `fonti`, shown on the lesson page grouped by work; a generator can return `fonte` for the problem it adapted, shown under the solution. `P.conFonte(generator, source)` adds the same source to every question of a generator. The verifier checks that every work exists and that every question's source is listed by its trick.
+
 A lesson can end with a "Try it" piece: add a function to `js/laboratorio.js` under the trick's id (`P.laboratori['trick-id'] = el => { ... }`). It receives an empty element and fills it; no inline styles (the CSP forbids them), so colours come from classes in `stile.css`.
 
 On the home page, the three dots next to each trick are its levels: empty with fewer than three answers at that level, half-filled while practising, filled once at least 80% of the last ten answers are right.
 
 ## Content rules
 
-- No problems, solutions or pages copied from books, courses or paid tests: classic problems are rewritten with new wording and numbers.
+- No problems, solutions or pages copied from books, courses or paid tests: problems taken from a book or an official document are rewritten with new wording and numbers, keep only the idea, and cite where the original is (`fonte`).
 - Nothing from real interviews or tests: only public information and generated material.
 - Every trick starts from an interview or desk scene, explains why it works and shows the method to do it in your head.
 - Hints say how to apply the trick to that question, not the answer: the first points the way, the second takes the first step.
@@ -118,7 +123,7 @@ js/nuvola.js                optional sync with a database (see below)
 config.js                   database address and public key; empty = browser only
 contenuti/materie.js        subjects and chapters
 contenuti/<subject>/        one file per trick
-contenuti/risorse.js        the Library's reading list
+contenuti/fonti.js          the books and official documents the problems come from
 strumenti/verifica.js       automatic content check
 strumenti/prova_nuvola.js   sync test with two simulated devices and a simulated database
 supabase/0001_palestra.sql  database tables and access rules

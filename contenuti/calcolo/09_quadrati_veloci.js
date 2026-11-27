@@ -197,6 +197,7 @@
       it: 'Finale in 5: n × (n + 1) poi 25. Vicino a 50: (25 + d) poi d². Vicino a 100: (100 + 2d) poi d². Altri: a² + 2ab + b². Varianza = vol²; rischi indipendenti: √(a² + b²).',
       en: 'Ending in 5: n × (n + 1) then 25. Near 50: (25 + d) then d². Near 100: (100 + 2d) then d². Others: a² + 2ab + b². Variance = vol²; independent risks: √(a² + b²).',
     },
+    fonti: [P.fonte('crack', 'Questions 1.86 and 1.87', { nota: { it: 'le stesse domande, 29² e 43²', en: 'the same questions, 29² and 43²' } })],
     test: true,
     nomiLivelli: { it: ['Quadrati', 'Vol e varianza', 'Rischi indipendenti'], en: ['Squares', 'Vol and variance', 'Independent risks'] },
     livelli: [

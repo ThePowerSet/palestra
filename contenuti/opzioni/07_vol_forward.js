@@ -58,6 +58,46 @@
     };
   }
 
+  // Variance adds up over days: one day at σ' instead of σ is worth (σ'² − σ²)/σ² extra days at σ
+  function giornoInPiu() {
+    const s = P.pick([16, 20, 20, 25, 30]), s2 = s + P.pick([2, 4, 5, 6, 8, 10]), g = P.pick([60, 100, 120, 200]);
+    const v = (s2 * s2 - s * s) / (s * s);
+    return {
+      testo: P.t(`Hai una call europea a ${g} giorni con vol implicita ${s}%. Sai che domani la vol implicita sarà ${s2}% per un giorno, poi torna a ${s}% fino alla scadenza. Di quanti giorni dovrebbe allungarsi la vita dell'opzione, a vol ${s}% costante, per avere lo stesso effetto sul prezzo?`,
+        `You hold a ${g}-day European call with implied vol ${s}%. You know that tomorrow implied vol will be ${s2}% for one day, then back to ${s}% until expiry. By how many days would the option's life have to grow, at a constant ${s}% vol, for the same effect on its price?`),
+      nota: P.t('in giorni, due decimali', 'in days, two decimals'),
+      risposta: P.numero(v, { tol: 0.011, mostra: P.fmt(Math.round(v * 100) / 100) }),
+      suggerimenti: [
+        P.t('Il prezzo dipende dalla varianza totale fino a scadenza, cioè dalla somma delle varianze giornaliere.', 'The price depends on the total variance up to expiry, that is the sum of the daily variances.'),
+        P.t(`Il giorno a ${s2}% aggiunge ${s2}² − ${s}² = ${s2 * s2 - s * s} di varianza (in unità annue); un giorno a ${s}% ne vale ${s * s}.`, `The day at ${s2}% adds ${s2}² − ${s}² = ${s2 * s2 - s * s} of variance (in annual units); a day at ${s}% is worth ${s * s}.`),
+      ],
+      soluzione: [`(${s2 * s2} − ${s * s}) / ${s * s} = ${P.fmt(Math.round(v * 100) / 100)}`, P.t(`quanti giorni restano non conta: ${g} o un altro numero danno la stessa risposta`, `the days left do not matter: ${g} or any other number gives the same answer`)],
+      fonte: P.fonte('crack', 'Question 2.23'),
+    };
+  }
+
+  // The VIX weights total variances (σ² T), not vols, to reach a constant 30 days
+  function vix() {
+    const N1 = P.pick([16, 20, 23, 25]), N2 = P.pick([37, 40, 44, 51]), s1 = P.pick([15, 18, 20, 22, 25]), s2 = s1 + P.pick([-2, 1, 2, 3, 4]);
+    const w1 = (N2 - 30) / (N2 - N1), w2 = (30 - N1) / (N2 - N1);
+    const v30 = (N1 / 365 * (s1 / 100) ** 2 * w1 + N2 / 365 * (s2 / 100) ** 2 * w2) * 365 / 30, v = 100 * Math.sqrt(v30);
+    return {
+      testo: P.t(`Le opzioni a ${N1} giorni implicano una vol del ${s1}%, quelle a ${N2} giorni del ${s2}%. Come fa il VIX, interpola a 30 giorni costanti. Che vol a 30 giorni ottieni?`,
+        `Options with ${N1} days left imply ${s1}% vol, those with ${N2} days ${s2}%. As the VIX does, interpolate to a constant 30 days. What 30-day vol do you get?`),
+      nota: P.t('in punti di vol, due decimali', 'in vol points, two decimals'),
+      risposta: P.numero(v, { tol: 0.02, mostra: P.fmt(Math.round(v * 100) / 100) }),
+      suggerimenti: [
+        P.t('Si interpolano le varianze totali, σ² × T, non le vol: è la varianza che si somma nel tempo.', 'Interpolate total variances, σ² × T, not vols: variance is what adds up over time.'),
+        P.t(`Pesi: (${N2} − 30)/(${N2} − ${N1}) = ${P.fmt(w1, 3)} sulla prima, (30 − ${N1})/(${N2} − ${N1}) = ${P.fmt(w2, 3)} sulla seconda; poi riporta a 30 giorni e prendi la radice.`, `Weights: (${N2} − 30)/(${N2} − ${N1}) = ${P.fmt(w1, 3)} on the first, (30 − ${N1})/(${N2} − ${N1}) = ${P.fmt(w2, 3)} on the second; then scale to 30 days and take the root.`),
+      ],
+      soluzione: [
+        `[${N1} × ${s1}² × ${P.fmt(w1, 3)} + ${N2} × ${s2}² × ${P.fmt(w2, 3)}] / 30 = ${P.fmt(Math.round(v * v * 10) / 10)}`,
+        `√${P.fmt(Math.round(v * v * 10) / 10)} = ${P.fmt(Math.round(v * 100) / 100)}`,
+      ],
+      fonte: P.fonte('cboeVix', 'Appendix 3, sample calculation'),
+    };
+  }
+
   function evento() {
     const [d, n, e, tot] = P.pick(EVENTI), giorni = n + 1;
     return {
@@ -133,8 +173,12 @@
       it: 'Si sommano le varianze: √(a² + b²). Vol forward: σf² = (σ₂²T₂ − σ₁²T₁)/(T₂ − T₁). Giorno dei risultati: varianza totale − giorni normali × d², poi la radice.',
       en: 'Variances add: √(a² + b²). Forward vol: σf² = (σ₂²T₂ − σ₁²T₁)/(T₂ − T₁). Earnings day: total variance − normal days × d², then the root.',
     },
+    fonti: [
+      P.fonte('crack', 'Question 2.23'),
+      P.fonte('cboeVix', 'Appendix 3, sample calculation', { nota: { it: 'come il VIX interpola due scadenze a 30 giorni', en: 'how the VIX interpolates two expiries to 30 days' } }),
+    ],
     test: false,
     nomiLivelli: { it: ['Somma', 'Vol forward', 'Giorno dei risultati'], en: ['Adding up', 'Forward vol', 'Earnings day'] },
-    livelli: [somma, forward, evento],
+    livelli: [somma, () => (P.chance(0.65) ? forward() : giornoInPiu()), () => (P.chance(0.65) ? evento() : vix())],
   });
 })();

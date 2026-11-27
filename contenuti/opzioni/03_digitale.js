@@ -26,6 +26,32 @@
       soluzione: [P.t(`call spread: ${f2(bassa)} − ${f2(alta)} = ${f2(bassa - alta)}`, `call spread: ${f2(bassa)} − ${f2(alta)} = ${f2(bassa - alta)}`),
         P.t(`digitale da 1: ${f2(bassa - alta)} / ${P.fmt(2 * h)} = ${P.fmt(p)}`, `digital paying 1: ${f2(bassa - alta)} / ${P.fmt(2 * h)} = ${P.fmt(p)}`),
         ...(paga > 1 ? [`${P.fmt(p)} × ${paga} = ${P.fmt(v)}`] : [])],
+      fonte: P.fonte('crack', 'Question 2.10'),
+    };
+  }
+
+  // A price that moves like a normal in euros (not in percent): P(S_T ≥ K) = N((S − K)/(σ√T)), rates at zero
+  const NORMALE = { '0.5': 0.6915, '1': 0.8413, '1.5': 0.9332, '2': 0.9772 };
+  function oro() {
+    const S = P.pick([300, 400, 500, 1800, 2000]), sd = P.pick([[40, 1, 40], [60, 0.25, 30], [80, 0.25, 40], [60, 1, 60], [40, 0.25, 20]]);
+    const [sigma, T, dev] = sd, z = P.pick([0.5, 1, 1.5, 2]) * (P.chance(0.5) ? 1 : -1), K = S + z * dev;
+    const N = NORMALE[String(Math.abs(z))], prob = z > 0 ? 1 - N : N, paga = P.pick([100000, 1000000]), v = prob * paga;
+    const nomeT = T === 1 ? P.t('un anno', 'one year') : P.t('tre mesi', 'three months');
+    return {
+      testo: P.t(`Il prezzo dell'oro si muove come una normale in dollari, non in percentuale: oggi è ${S} $, con volatilità ${sigma} $ l'anno. Tassi a zero. Quanto vale oggi una digitale che paga ${P.fmt(paga)} $ fra ${nomeT} se l'oro è a ${P.fmt(K)} $ o sopra?`,
+        `The gold price moves like a normal in dollars, not in percent: today it is $${S}, with a volatility of $${sigma} a year. Zero rates. What is a digital paying $${P.fmt(paga)} in ${nomeT} if gold is at or above $${P.fmt(K)} worth today?`),
+      nota: P.t(`in dollari; N(0.5) = 0.6915, N(1) = 0.8413, N(1.5) = 0.9332, N(2) = 0.9772`, `in dollars; N(0.5) = 0.6915, N(1) = 0.8413, N(1.5) = 0.9332, N(2) = 0.9772`),
+      risposta: P.numero(v, { rel: 0.01, mostra: P.fmt(Math.round(v)) }),
+      suggerimenti: [
+        P.t(`A scadenza il prezzo è normale con media ${S} e deviazione standard ${sigma} × √T dollari: ${dev}.`, `At expiry the price is normal with mean ${S} and standard deviation ${sigma} × √T dollars: ${dev}.`),
+        P.t(`Lo strike è a ${P.fmt(z)} deviazioni standard dalla media: la probabilità di finire sopra è ${z > 0 ? '1 − N' : 'N'}(${P.fmt(Math.abs(z))}).`, `The strike is ${P.fmt(z)} standard deviations from the mean: the chance of ending above it is ${z > 0 ? '1 − N' : 'N'}(${P.fmt(Math.abs(z))}).`),
+      ],
+      soluzione: [
+        `(${P.fmt(K)} − ${S}) / ${dev} = ${P.fmt(z)}`,
+        P.t(`probabilità: ${P.fmt(prob, 4)}`, `probability: ${P.fmt(prob, 4)}`),
+        `${P.fmt(prob, 4)} × ${P.fmt(paga)} = ${P.fmt(Math.round(v))} $`,
+      ],
+      fonte: P.fonte('crack', 'Question 2.39'),
     };
   }
 
@@ -132,8 +158,13 @@
       it: 'Digitale(K) ≈ (C(K − h) − C(K + h)) / 2h = probabilità di finire sopra K (tassi a zero). Call spread largo w a prezzo c: probabilità ≈ c / w. Intervallo: differenza di due digitali. ATM: N(d₂) < 0.5 < N(d₁) = delta.',
       en: 'Digital(K) ≈ (C(K − h) − C(K + h)) / 2h = probability of ending above K (zero rates). Call spread w wide at price c: probability ≈ c / w. Range: difference of two digitals. ATM: N(d₂) < 0.5 < N(d₁) = delta.',
     },
+    fonti: [
+      P.fonte('crack', 'Question 2.10', { nota: { it: 'prezzo e replica di una digitale', en: 'price and replication of a digital' } }),
+      P.fonte('crack', 'Question 2.39'),
+      P.fonte('zhou', '§6.3, "Binary options"', { nota: { it: 'e^(−rT) N(d2) e la copertura', en: 'e^(−rT) N(d2) and the hedge' } }),
+    ],
     test: false,
     nomiLivelli: { it: ['Digitale', 'Probabilità', 'Intervallo'], en: ['Digital', 'Probability', 'Range'] },
-    livelli: [digitale, probabilita, intervallo],
+    livelli: [digitale, () => (P.chance(0.65) ? probabilita() : oro()), intervallo],
   });
 })();

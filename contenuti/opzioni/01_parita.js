@@ -71,6 +71,25 @@
     };
   }
 
+  // c − p = S − K e^(−rT): call and put are worth the same when the strike is the forward
+  function stessoPrezzo() {
+    const S = P.pick([50, 80, 100, 100, 200]), r = P.pick([2, 3, 4, 5, 6]), T = P.pick([0.5, 1, 1, 2]);
+    const K = S * Math.exp(r / 100 * T);
+    const nomeT = T === 1 ? P.t('un anno', 'one year') : T === 2 ? P.t('due anni', 'two years') : P.t('sei mesi', 'six months');
+    return {
+      testo: P.t(`Titolo a ${S}, niente dividendi, tasso ${r}% composto in continuo. Call e put europee a ${nomeT}, stesso strike: a quale strike costano uguale?`,
+        `Stock at ${S}, no dividends, rate ${r}% compounded continuously. European call and put expiring in ${nomeT}, same strike: at which strike do they cost the same?`),
+      nota: P.t('un decimale basta', 'one decimal is enough'),
+      risposta: P.numero(K, { rel: 0.0025, mostra: P.fmt(Math.round(K * 100) / 100) }),
+      suggerimenti: [
+        P.t('Parità: c − p = S − K e^(−rT). Call e put sono uguali quando il lato destro è zero.', 'Parity: c − p = S − K e^(−rT). Call and put are equal when the right-hand side is zero.'),
+        P.t(`K = S e^(rT): lo strike forward. A mente, S × (1 + rT) = ${P.fmt(S * (1 + r / 100 * T))}.`, `K = S e^(rT): the forward strike. In your head, S × (1 + rT) = ${P.fmt(S * (1 + r / 100 * T))}.`),
+      ],
+      soluzione: [`K = ${S} × e^(${P.fmt(r / 100 * T)}) = ${P.fmt(Math.round(K * 100) / 100)}`, P.t('sotto il forward vale di più la call, sopra la put', 'below the forward the call is worth more, above it the put')],
+      fonte: P.fonte('zhou', '§6.1, "Put-call parity"'),
+    };
+  }
+
   function arbitraggio() {
     const { S, K } = sottostante();
     const giusto = S - K, scarto = P.pick([-1, -0.75, -0.5, -0.4, -0.3, 0.3, 0.4, 0.5, 0.75, 1]) * (S >= 100 ? 1 : 0.5);
@@ -167,8 +186,17 @@
       it: 'C − P = S − K (tassi a zero), C − P = S − K(1 − rT) con un tasso. Forward = K + C − P. Call cara rispetto alla parità: vendi call, compra put e titolo; economica: il contrario. Guadagno = scarto.',
       en: 'C − P = S − K (zero rates), C − P = S − K(1 − rT) with a rate. Forward = K + C − P. Call rich against parity: sell the call, buy the put and the stock; cheap: the opposite. Profit = the gap.',
     },
+    fonti: [
+      P.fonte('zhou', '§6.1, "Put-call parity"', { nota: { it: 'la dimostrazione con due portafogli e lo strike forward', en: 'the proof with two portfolios and the forward strike' } }),
+      P.fonte('zhou', '§6.3, "Bull spread"', { nota: { it: 'i limiti di prezzo di un call spread', en: 'the price bounds of a call spread' } }),
+      P.fonte('crack', 'Question 2.3', { nota: { it: 'call e put at-the-money a confronto', en: 'at-the-money call and put compared' } }),
+    ],
     test: false,
     nomiLivelli: { it: ['Dalla call alla put', 'Forward e tassi', 'Arbitraggio'], en: ['From call to put', 'Forwards and rates', 'Arbitrage'] },
-    livelli: [senzaTassi, alDesk, arbitraggio],
+    livelli: [
+      () => (P.chance(0.7) ? senzaTassi() : stessoPrezzo()),
+      P.conFonte(alDesk, P.fonte('zhou', '§6.1, "Put-call parity"', { nota: { it: 'la dimostrazione con due portafogli e lo strike forward', en: 'the proof with two portfolios and the forward strike' } })),
+      arbitraggio,
+    ],
   });
 })();

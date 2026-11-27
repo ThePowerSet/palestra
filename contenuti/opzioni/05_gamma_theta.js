@@ -53,6 +53,24 @@
     };
   }
 
+  // Black-Scholes at zero rates: theta = −½ Γ σ² S², so one day's theta is −½ Γ (σS/16)²
+  function thetaDaGamma() {
+    const [S, s] = P.pick([[100, 32], [100, 40], [100, 48], [200, 16], [200, 20], [200, 24], [200, 32], [200, 40], [400, 16], [400, 20]]);
+    const g = P.pick([0.02, 0.03, 0.04, 0.05, 0.08]), m = s / 100 * S / 16, v = 0.5 * g * m * m;
+    return {
+      testo: P.t(`Tassi a zero, Black-Scholes. Un'opzione su un titolo a ${S} con vol implicita ${s}% ha gamma ${P.fmt(g)}. Quanto perde di valore in un giorno, se niente si muove?`,
+        `Zero rates, Black-Scholes. An option on a stock at ${S} with implied vol ${s}% has gamma ${P.fmt(g)}. How much value does it lose in a day if nothing moves?`),
+      nota: P.t('il theta di un giorno, in valore assoluto; un anno = 256 giorni', 'one day\'s theta, in absolute value; a year = 256 days'),
+      risposta: P.numero(v, { rel: 0.02, mostra: P.fmt(Math.round(v * 10000) / 10000) }),
+      suggerimenti: [
+        P.t('A tassi zero l\'equazione di Black-Scholes dice θ + ½ Γ σ² S² = 0: theta e gamma hanno segni opposti.', 'At zero rates the Black-Scholes equation says θ + ½ Γ σ² S² = 0: theta and gamma have opposite signs.'),
+        P.t(`In un giorno: ½ × Γ × (movimento giornaliero)², con movimento σS/16 = ${P.fmt(m)}.`, `In a day: ½ × Γ × (daily move)², with the move σS/16 = ${P.fmt(m)}.`),
+      ],
+      soluzione: [`σS/16 = ${P.fmt(s / 100)} × ${S} / 16 = ${P.fmt(m)}`, `½ × ${P.fmt(g)} × ${P.fmt(m)}² = ${P.fmt(Math.round(v * 10000) / 10000)}`],
+      fonte: P.fonte('crack', 'Question 2.54'),
+    };
+  }
+
   function pareggio() {
     if (P.chance(0.5)) {
       // ATM in Black-Scholes: the break-even move is the implied daily move, σ × S / 16
@@ -131,8 +149,12 @@
       it: 'P&L coperto ≈ ½ Γ ΔS² + Θ. Pareggio: ΔS = √(2|Θ|/Γ). Per un\'opzione at-the-money il pareggio è il movimento giornaliero implicito, σS/16. Lungo gamma vince se la vol realizzata supera l\'implicita.',
       en: 'Hedged P&L ≈ ½ Γ ΔS² + Θ. Break-even: ΔS = √(2|Θ|/Γ). At the money the break-even is the implied daily move, σS/16. Long gamma wins if realised vol beats implied.',
     },
+    fonti: [
+      P.fonte('zhou', '§6.2, "Gamma" and "Theta"', { nota: { it: 'la teoria: gamma, theta e l\'equazione che li lega', en: 'the theory: gamma, theta and the equation linking them' } }),
+      P.fonte('crack', 'Question 2.54'),
+    ],
     test: false,
     nomiLivelli: { it: ['Gamma', 'Gamma meno theta', 'Pareggio'], en: ['Gamma', 'Gamma minus theta', 'Break-even'] },
-    livelli: [gammaPnl, netto, pareggio],
+    livelli: [gammaPnl, () => (P.chance(0.6) ? netto() : thetaDaGamma()), pareggio],
   });
 })();

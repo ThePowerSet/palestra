@@ -92,6 +92,41 @@
     };
   }
 
+  // Monty Hall and its relatives: what the person opening the door knows is what changes the answer
+  function monty() {
+    const tipo = P.pick(['uno', 'uno', 'tutte', 'caso']);
+    const n = tipo === 'caso' ? 3 : tipo === 'uno' ? P.pick([3, 3, 4, 5, 6]) : P.pick([3, 5, 10, 20, 100]);
+    let num, den, testo, s1, s2, sol;
+    if (tipo === 'uno') {
+      num = n - 1; den = n * (n - 2);
+      testo = P.t(`Ci sono ${n} porte, un premio dietro una sola. Ne scegli una. Il presentatore, che sa dov'è il premio, apre una delle altre porte vuote. Se cambi e prendi una delle porte chiuse rimaste${n > 3 ? ', a caso' : ''}, con che probabilità vinci?`,
+        `There are ${n} doors, a prize behind just one. You pick one. The host, who knows where the prize is, opens one of the other, empty doors. If you switch to one of the closed doors left${n > 3 ? ', at random' : ''}, what is your chance of winning?`);
+      s1 = P.t('Il presentatore non apre mai la tua porta né il premio: la tua porta resta a 1/' + n + '.', 'The host never opens your door or the prize: your door stays at 1/' + n + '.');
+      s2 = P.t(`Il resto, ${n - 1}/${n}, si divide fra le ${n - 2} porte chiuse rimaste.`, `The rest, ${n - 1}/${n}, spreads over the ${n - 2} closed doors left.`);
+      sol = [P.t(`la tua porta: 1/${n}; le altre chiuse insieme: ${n - 1}/${n}`, `your door: 1/${n}; the other closed doors together: ${n - 1}/${n}`), `${n - 1}/${n} ÷ ${n - 2} = ${num}/${den}`];
+    } else if (tipo === 'tutte') {
+      num = n - 1; den = n;
+      testo = P.t(`Ci sono ${n} porte, un premio dietro una sola. Ne scegli una. Il presentatore, che sa dov'è il premio, apre ${n - 2} delle altre porte, tutte vuote, e ne lascia chiusa una. Con che probabilità vinci se cambi?`,
+        `There are ${n} doors, a prize behind just one. You pick one. The host, who knows where the prize is, opens ${n - 2} of the other doors, all empty, and leaves one closed. What is your chance of winning if you switch?`);
+      s1 = P.t('Quando hai scelto, avevi 1/' + n + '. Il presentatore sa e non tocca la tua porta: quella probabilità non cambia.', 'When you chose you had 1/' + n + '. The host knows and never touches your door: that probability does not change.');
+      s2 = P.t(`Tutto il resto, ${n - 1}/${n}, finisce sull'unica porta chiusa che rimane.`, `All the rest, ${n - 1}/${n}, ends up on the one closed door left.`);
+      sol = [P.t(`la tua porta: 1/${n}`, `your door: 1/${n}`), P.t(`cambiando: ${n - 1}/${n}`, `switching: ${n - 1}/${n}`)];
+    } else {
+      num = 1; den = 2;
+      testo = P.t('Tre porte, un premio dietro una sola. Ne scegli una. Poi uno spettatore, che non sa niente, apre a caso una delle altre due: per fortuna è vuota. Con che probabilità vinci se cambi?',
+        'Three doors, a prize behind just one. You pick one. Then someone from the audience, who knows nothing, opens one of the other two at random: luckily it is empty. What is your chance of winning if you switch?');
+      s1 = P.t('Qui la porta aperta poteva nascondere il premio: che sia vuota è un\'informazione su tutte e due le porte chiuse.', 'Here the opened door could have hidden the prize: finding it empty tells you something about both closed doors.');
+      s2 = P.t('Probabilità che la porta aperta sia vuota: 1/3 × 1 + 2/3 × 1/2 = 2/3. Di questi casi, quelli con il premio dietro la tua: 1/3.', 'Chance the opened door is empty: 1/3 × 1 + 2/3 × 1/2 = 2/3. Of those cases, the ones with the prize behind yours: 1/3.');
+      sol = [P.t('la tua porta: (1/3) / (2/3) = 1/2', 'your door: (1/3) / (2/3) = 1/2'), P.t('cambiando: 1/2, non 2/3: lo spettatore non sapeva', 'switching: 1/2, not 2/3: the spectator did not know')];
+    }
+    return {
+      testo, nota: P.t('una frazione va bene', 'a fraction is fine'),
+      risposta: P.numero(num / den, { decimali: 3, mostra: frazione(num, den) }),
+      suggerimenti: [s1, s2], soluzione: sol,
+      fonte: tipo === 'caso' ? P.fonte('crack', 'Question 4.21') : P.fonte('zhou', '§4.3, "Monty Hall problem"'),
+    };
+  }
+
   P.trucco({
     id: 'prob-bayes',
     materia: 'probabilita',
@@ -148,8 +183,20 @@
       it: 'Conta i casi compatibili e quelli buoni. Almeno uno è 6 → doppio 6: 1/11; il primo è 6: 1/6. Test: immagina 10,000 casi, veri positivi / tutti i positivi. Moneta con due teste: 2^k / (2^k + n − 1).',
       en: 'Count the consistent cases and the good ones. At least one is a 6 → double 6: 1/11; the first is a 6: 1/6. Tests: picture 10,000 cases, true positives / all positives. Two-headed coin: 2^k / (2^k + n − 1).',
     },
+    fonti: [
+      P.fonte('zhou', '§4.3, "Boys and girls"', { nota: { it: 'lo stesso «almeno uno» con due figli', en: 'the same "at least one" with two children' } }),
+      P.fonte('crack', 'Question 4.36', { nota: { it: 'un test con molti falsi positivi', en: 'a test with many false positives' } }),
+      P.fonte('zhou', '§4.3, "Monty Hall problem"'),
+      P.fonte('crack', 'Question 4.21'),
+      P.fonte('crack', 'Question 4.29'),
+      P.fonte('zhou', '§4.3, "Unfair coin"', { nota: { it: 'la stessa moneta con due teste', en: 'the same two-headed coin' } }),
+    ],
     test: false,
     nomiLivelli: { it: ['Contare', 'Falsi allarmi', 'La moneta truccata'], en: ['Counting', 'False alarms', 'The trick coin'] },
-    livelli: [contare, test, moneta],
+    livelli: [
+      contare,
+      () => (P.chance(0.6) ? P.conFonte(test, P.fonte('crack', 'Question 4.36', { nota: { it: 'un test con molti falsi positivi', en: 'a test with many false positives' } }))() : monty()),
+      P.conFonte(moneta, P.fonte('crack', 'Question 4.29')),
+    ],
   });
 })();

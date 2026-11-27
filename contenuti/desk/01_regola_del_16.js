@@ -169,12 +169,16 @@
       it: 'Movimento giornaliero ≈ vol annua / 16 (√252 ≈ 16), ed è una deviazione standard. Al contrario × 16. Settimana: / 7.2. n giorni: × √n. Lungo gamma guadagna se la realizzata (movimento × 16) supera l\'implicita.',
       en: 'Daily move ≈ annual vol / 16 (√252 ≈ 16), and it is one standard deviation. The other way, × 16. Week: / 7.2. n days: × √n. Long gamma wins if realised vol (move × 16) beats implied.',
     },
+    fonti: [
+      P.fonte('cboe16', 'section on the rule of 16', { nota: { it: 'la vol implicita divisa per 16, in punti indice', en: 'implied vol divided by 16, in index points' } }),
+      P.fonte('crack', 'Question 3.2', { nota: { it: 'da un anno a quattro: la volatilità cresce con √T', en: 'from one year to four: volatility grows with √T' } }),
+    ],
     test: false,
     nomiLivelli: { it: ['Giornaliero', 'In euro e al contrario', 'Tempo e gamma'], en: ['Daily', 'In euros and backwards', 'Time and gamma'] },
     livelli: [
       giornaliero,
-      () => P.pesato([[0.55, inEuro], [0.45, inverso]])(),
-      () => P.pesato([[0.35, radiceDelTempo], [0.25, settimana], [0.4, gamma]])(),
+      () => P.pesato([[0.55, P.conFonte(inEuro, P.fonte('cboe16', 'section on the rule of 16', { nota: { it: 'la vol implicita divisa per 16, in punti indice', en: 'implied vol divided by 16, in index points' } }))], [0.45, inverso]])(),
+      () => P.pesato([[0.35, P.conFonte(radiceDelTempo, P.fonte('crack', 'Question 3.2', { nota: { it: 'da un anno a quattro: la volatilità cresce con √T', en: 'from one year to four: volatility grows with √T' } }))], [0.25, settimana], [0.4, gamma]])(),
     ],
   });
 })();

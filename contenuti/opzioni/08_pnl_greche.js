@@ -104,6 +104,10 @@
       it: 'P&L ≈ Δ·ΔS + ½·Γ·ΔS² + vega·Δvol + Θ·Δt. Gamma: sempre positivo se lungo, con il ½. Al desk le greche sono già in euro: stesso conto. Il residuo misura quanto le greche spiegano.',
       en: 'P&L ≈ Δ·ΔS + ½·Γ·ΔS² + vega·Δvol + Θ·Δt. Gamma: always positive when long, with the ½. On the desk the Greeks are already in euros: same sum. The residual measures how much the Greeks explain.',
     },
+    fonti: [
+      P.fonte('zhou', '§6.2, "The Greeks"', { nota: { it: 'le definizioni di ogni greca, da cui viene l\'espansione del P&L', en: 'the definition of each Greek, where the P&L expansion comes from' } }),
+      P.fonte('crack', 'Question 2.7', { nota: { it: 'un\'opzione coperta in delta quando arriva una notizia', en: 'a delta-hedged option when news hits' } }),
+    ],
     test: false,
     nomiLivelli: { it: ['Delta e gamma', 'Più il vega', 'Un libro intero'], en: ['Delta and gamma', 'Adding vega', 'A whole book'] },
     livelli: [deltaGamma, conVega, libro],

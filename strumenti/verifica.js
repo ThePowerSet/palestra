@@ -2,8 +2,9 @@
 /* Controllo dei contenuti, in italiano e in inglese: genera molte domande per ogni livello di ogni trucco
    (e per il calcolo di base) e verifica che siano coerenti: testo e passi senza "undefined" o "NaN",
    risposta giusta accettata, risposta sbagliata rifiutata, scelte multiple distinte, nessuna parola
-   rimasta nella lingua sbagliata, e numeri scritti in un solo modo in tutte e due le lingue
-   (punto decimale e virgola per le migliaia: 0.375, 25,000).
+   rimasta nella lingua sbagliata, numeri scritti in un solo modo in tutte e due le lingue
+   (punto decimale e virgola per le migliaia: 0.375, 25,000), e fonti citate che esistono e che la
+   lezione elenca.
 
        node strumenti/verifica.js          400 domande per livello e per lingua
        node strumenti/verifica.js 2000     di più
@@ -93,11 +94,22 @@ for (const l of P.LINGUE) {
       if (v) errori.push(`[${l}] ${t.id}.${k}: numero «${v}» non in notazione inglese`);
     }
     if (t.nomiLivelli && !(t.nomiLivelli[l] && t.nomiLivelli[l].length === 3)) errori.push(`[${l}] ${t.id}: nomiLivelli incompleti`);
+    // sources: every work cited exists, and every question's source is listed on the lesson page
+    const chiave = f => `${f.opera} ${f.dove}`;
+    const elencate = new Set((t.fonti || []).map(chiave));
+    for (const f of t.fonti || []) {
+      if (!P.opere || !P.opere[f.opera]) errori.push(`${t.id}: fonte sconosciuta ${f.opera}`);
+      if (f.nota && !(f.nota.it && f.nota.en)) errori.push(`${t.id}: nota della fonte ${chiave(f)} non in tutte e due le lingue`);
+    }
     t.livelli.forEach((gen, i) => {
       for (let n = 0; n < N; n++) {
         let q;
         try { q = gen(); } catch (e) { errori.push(`[${l}] ${t.id} L${i + 1}: eccezione ${e.message}`); break; }
         controlla(`${t.id} L${i + 1}`, q, true);
+        if (q && q.fonte) {
+          if (!P.opere[q.fonte.opera]) errori.push(`${t.id} L${i + 1}: fonte sconosciuta ${q.fonte.opera}`);
+          else if (!elencate.has(chiave(q.fonte))) errori.push(`${t.id} L${i + 1}: la fonte «${chiave(q.fonte)}» non è nella lista del trucco`);
+        }
         totale++;
       }
     });

@@ -55,6 +55,24 @@
     };
   }
 
+  // ATM call, zero dividends: d1 = (r + σ²/2) √T / σ, and N(x) ≈ 0.5 + 0.4x for small x
+  function deltaAtm() {
+    const [r, s] = P.pick([[0, 20], [0, 30], [0, 40], [2, 20], [4, 20], [6, 20], [5, 25], [3, 30], [6, 30]]);
+    const d1 = (r / 100 + (s / 100) ** 2 / 2) / (s / 100), v = P.grafici.N(d1);
+    return {
+      testo: P.t(`Black-Scholes, niente dividendi. Call europea at-the-money a un anno, vol ${s}%, tasso ${r}%. Quanto vale il suo delta?`,
+        `Black-Scholes, no dividends. At-the-money European call, one year, vol ${s}%, rate ${r}%. What is its delta?`),
+      nota: P.t('due decimali', 'two decimals'),
+      risposta: P.numero(v, { tol: 0.012, mostra: P.fmt(Math.round(v * 100) / 100) }),
+      suggerimenti: [
+        P.t('Il delta è N(d1), con d1 = (ln(S/K) + (r + σ²/2) T) / (σ√T). Con lo strike uguale al prezzo il logaritmo è zero.', 'Delta is N(d1), with d1 = (ln(S/K) + (r + σ²/2) T) / (σ√T). At the money the log is zero.'),
+        P.t(`d1 = (${P.fmt(r / 100)} + ${P.fmt((s / 100) ** 2 / 2)}) / ${P.fmt(s / 100)} = ${P.fmt(d1, 3)}; per x piccolo N(x) ≈ 0.5 + 0.4x.`, `d1 = (${P.fmt(r / 100)} + ${P.fmt((s / 100) ** 2 / 2)}) / ${P.fmt(s / 100)} = ${P.fmt(d1, 3)}; for small x, N(x) ≈ 0.5 + 0.4x.`),
+      ],
+      soluzione: [`d1 = ${P.fmt(d1, 3)}`, `N(${P.fmt(d1, 3)}) ≈ 0.5 + 0.4 × ${P.fmt(d1, 3)} ≈ ${P.fmt(Math.round(v * 100) / 100)}`, P.t('sopra 0.5 anche a tasso zero: il termine σ²/2 sposta d1 a destra', 'above 0.5 even at zero rates: the σ²/2 term pushes d1 to the right')],
+      fonte: P.fonte('crack', 'Question 2.5'),
+    };
+  }
+
   function portafoglio() {
     const a = P.pick([5, 10, 20, 30]), da = P.pick(DELTA);
     const b = P.pick([5, 10, 15, 20]), db = -P.pick(DELTA);
@@ -130,8 +148,13 @@
       it: 'Delta della posizione = n × delta × 100 con il segno; per coprirti tratti il contrario. Δcall − Δput = 1. Straddle: 2Δcall − 1. Corto di put = delta positivo.',
       en: 'Position delta = n × delta × 100 with its sign; to hedge, trade the opposite. Δcall − Δput = 1. Straddle: 2Δcall − 1. Short puts = positive delta.',
     },
+    fonti: [
+      P.fonte('zhou', '§6.2, "Delta"', { nota: { it: 'delta di call e put, e la copertura', en: 'call and put delta, and hedging' } }),
+      P.fonte('crack', 'Question 2.5'),
+      P.fonte('crack', 'Question 2.42', { nota: { it: 'quante azioni per coprire un\'opzione at-the-money', en: 'how many shares hedge an at-the-money option' } }),
+    ],
     test: false,
     nomiLivelli: { it: ['Copertura', 'Call, put, straddle', 'Portafoglio'], en: ['Hedging', 'Calls, puts, straddles', 'Portfolio'] },
-    livelli: [copertura, callPut, portafoglio],
+    livelli: [copertura, () => (P.chance(0.65) ? callPut() : deltaAtm()), portafoglio],
   });
 })();
