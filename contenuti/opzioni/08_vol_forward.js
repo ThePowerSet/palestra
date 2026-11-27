@@ -121,7 +121,7 @@
     id: 'opz-vol-forward',
     materia: 'opzioni',
     capitolo: 'volatilita',
-    numero: 7,
+    numero: 8,
     titolo: { it: 'Le varianze si sommano', en: 'Variances add up' },
     sottotitolo: {
       it: 'La vol forward fra due scadenze e il movimento prezzato per i risultati, con una sola regola: si sommano le varianze, non le vol.',

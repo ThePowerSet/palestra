@@ -105,7 +105,7 @@
     id: 'bt-pesate',
     materia: 'rompicapi',
     capitolo: 'informazione',
-    numero: 7,
+    numero: 8,
     titolo: { it: 'Quanta informazione dà una prova', en: 'How much a test can tell you' },
     sottotitolo: {
       it: 'Una pesata ha tre esiti, un assaggio due: conta gli esiti possibili e sai il minimo di prove. Palline, veleno, lingotti, uova.',

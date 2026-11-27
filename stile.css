@@ -544,6 +544,58 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .fonte-domanda { margin: .2rem 0 1rem; font-size: .84rem; color: var(--tenue); }
 .rivedi .fonte-domanda { margin: .2rem 0 .4rem 1.6rem; }
 
+/* ---------- indice: the column beside "Every trick" ---------- */
+
+/* The column lives in the left margin, outside the page width, so the list keeps all its room. Its rail spans
+   the Programme block: the column appears with "Every trick" and stays in view only while the list does.
+   A subject opened with its arrow unfolds with a grid-rows transition (0fr to 1fr); the subject you are
+   reading has its name in orange. */
+.programma { position: relative; }
+.indice-binario { position: absolute; top: 0; bottom: 0; right: calc(100% + 1.25rem); width: min(230px, calc((100vw - var(--larghezza)) / 2 - 2rem)); }
+.indice {
+  position: sticky; top: 5rem; max-height: calc(100vh - 6rem); overflow-y: auto; overscroll-behavior: contain;
+  padding: .2rem .2rem 1rem 0; font-size: .8rem; scrollbar-width: none;
+}
+.indice-gruppo { border-bottom: 1px solid var(--linea); }
+.indice-riga { display: flex; align-items: center; }
+/* the arrow is its own button: it opens or closes the subject, while the name scrolls the list to it */
+.indice-apri {
+  flex: none; display: grid; place-items: center; width: 1.5rem; height: 1.7rem; margin-left: -.35rem; padding: 0;
+  border: 0; border-radius: 6px; background: none; color: var(--tenue);
+}
+.indice-apri::before {
+  content: ""; width: .36rem; height: .36rem; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg); transition: transform .25s ease;
+}
+.indice-apri:hover:not(:disabled) { transform: none; color: var(--accento); background: var(--accento-chiaro); }
+.indice-gruppo.aperto .indice-apri::before { transform: rotate(45deg); }
+.indice-materia {
+  flex: 1; display: flex; align-items: center; gap: .5rem; padding: .5rem .1rem .5rem .25rem; color: var(--tenue); text-decoration: none; font-weight: 600;
+  transition: color .2s ease;
+}
+.indice-gruppo.aperto .indice-materia { color: var(--testo); }
+.indice-gruppo .indice-materia[aria-current] { color: var(--arancio); }
+.indice-gruppo .indice-materia:hover { color: var(--accento); }
+.indice .nome { flex: 1; }
+.indice .conto { font: 500 .7rem var(--mono); color: var(--tenue); }
+.indice-dentro { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+.indice-dentro > div { overflow: hidden; min-height: 0; }
+.indice-gruppo.aperto .indice-dentro { grid-template-rows: 1fr; }
+.indice .capitolo { display: block; margin: .45rem 0 .2rem .6rem; font-size: .58rem; }
+.indice ul { list-style: none; margin: 0 0 .5rem; padding: 0; }
+.indice li a {
+  display: grid; grid-template-columns: 1.35rem 1fr auto; gap: .1rem; align-items: baseline;
+  padding: .22rem .3rem .22rem .5rem; border-left: 2px solid var(--linea); color: var(--tenue); text-decoration: none; line-height: 1.35;
+  transition: color .2s ease, border-color .2s ease;
+}
+.indice li a:hover { color: var(--testo); border-left-color: var(--linea-forte); }
+.indice .numero { font: 500 .68rem var(--mono); color: var(--tenue); }
+.indice .spunta { color: var(--giusto); font-size: .8rem; }
+/* the margin is too narrow for it below this width: the list stands alone, as before */
+@media (max-width: 1379px) {
+  .indice-binario { display: none; }
+}
+
 /* ---------- piede ---------- */
 
 .piede { border-top: 1px solid var(--linea); margin-top: 2rem; }
@@ -598,7 +650,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 
 @media print {
   body { background: #fff; color: #000; display: block; }
-  body::before, .testata, .piede, .azioni-lezione, .lab, .vicini { display: none; }
+  body::before, .testata, .piede, .azioni-lezione, .lab, .vicini, .indice-binario { display: none; }
   main { padding: 0; max-width: none; }
   main > * { animation: none; }
   .scheda-carta, .materia { box-shadow: none; border-color: #bbb; break-inside: avoid; }

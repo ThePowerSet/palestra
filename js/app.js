@@ -224,13 +224,71 @@
           <li><b>${t('Mescola e metti il tempo', 'Mix and add the clock')}</b><span>${t('Allenamento misto, dove il trucco lo scopri dopo, e test a tempo come nelle selezioni.', 'Mixed practice, where you find out the trick afterwards, and timed tests as in recruitment.')}</span></li>
         </ol>`}
       </section>
-      <section class="blocco">
+      <section class="blocco programma">
         <div class="blocco-testa"><span class="kicker">${t('Programma', 'Programme')}</span><h2>${t('Tutti i trucchi', 'Every trick')}</h2>
           <p class="mini">${t('I tre puntini sono i livelli: pieno quando sei sopra l\'80% nelle ultime dieci risposte.', 'The three dots are the levels: filled once you are above 80% in the last ten answers.')} <a href="#/schede">${t('Tutte le schede in una pagina →', 'Every summary on one page →')}</a></p></div>`;
     // brain teasers are left out here: they have their own page in the header
-    h += P.materie.filter(m => m.id !== 'rompicapi').map(m => sezioneMateria(m)).join('') + '</section>';
+    const materie = P.materie.filter(m => m.id !== 'rompicapi' && P.trucchiDi(m.id).length);
+    h += `${indice(materie)}<div class="programma-lista">${materie.map(m => sezioneMateria(m)).join('')}</div></section>`;
     vista.innerHTML = h;
     vista.querySelectorAll('[data-allena]').forEach(b => { b.onclick = () => allenaTrucco(P.trovaTrucco(b.dataset.allena)); });
+    seguiIndice();
+  }
+
+  // The column beside "Every trick": every subject by name, and the one you are scrolling through
+  // open on its chapters and tricks. A click scrolls the list to that subject or trick.
+  function indice(materie) {
+    const voce = x => `<li><a href="#/trucco/${x.id}" data-trucco="${x.id}"><span class="numero">${String(x.numero).padStart(2, '0')}</span>
+      <span>${esc(tr(x.titolo))}</span>${P.dati.imparati[x.id] ? `<span class="spunta" title="${t('Imparato', 'Learnt')}">✓</span>` : ''}</a></li>`;
+    const gruppo = m => {
+      const lista = P.trucchiDi(m.id), fatti = lista.filter(x => P.dati.imparati[x.id]).length;
+      const capitoli = m.capitoli.map(c => {
+        const tc = P.trucchiDi(m.id, c.id);
+        return tc.length ? `${m.capitoli.length > 1 ? `<span class="capitolo">${esc(tr(c.titolo))}</span>` : ''}<ul>${tc.map(voce).join('')}</ul>` : '';
+      }).join('');
+      return `<div class="indice-gruppo" data-materia="${m.id}">
+        <div class="indice-riga"><button type="button" class="indice-apri" aria-expanded="false" aria-label="${t(`Apri o chiudi ${esc(tr(m.titolo))}`, `Open or close ${esc(tr(m.titolo))}`)}"></button>
+        <a class="indice-materia" href="#/materia/${m.id}"><span class="nome">${esc(tr(m.titolo))}</span><span class="conto">${fatti}/${lista.length}</span></a></div>
+        <div class="indice-dentro"><div>${capitoli}</div></div></div>`;
+    };
+    // the rail runs the height of the Programme block, in the left margin; the column inside it sticks while you scroll
+    return `<div class="indice-binario"><aside class="indice" aria-label="${t('Indice del programma', 'Programme contents')}">${materie.map(gruppo).join('')}</aside></div>`;
+  }
+
+  function seguiIndice() {
+    const ind = vista.querySelector('.programma .indice');
+    if (!ind) return;
+    const sezioni = [...vista.querySelectorAll('.programma .materia')];
+    const fluido = () => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
+    // the name scrolls the list to the subject, a trick to its row
+    ind.querySelectorAll('.indice-materia').forEach(a => {
+      a.onclick = e => { e.preventDefault(); document.getElementById(`materia-${a.closest('.indice-gruppo').dataset.materia}`).scrollIntoView({ behavior: fluido(), block: 'start' }); };
+    });
+    ind.querySelectorAll('[data-trucco]').forEach(a => {
+      a.onclick = e => { e.preventDefault(); vista.querySelector(`[data-riga="${a.dataset.trucco}"]`).scrollIntoView({ behavior: fluido(), block: 'center' }); };
+    });
+    // the arrow opens or closes the subject's chapters and tricks; nothing opens or closes by itself
+    ind.querySelectorAll('.indice-apri').forEach(b => {
+      b.onclick = () => { const aperto = b.closest('.indice-gruppo').classList.toggle('aperto'); b.setAttribute('aria-expanded', String(aperto)); };
+    });
+    // The only thing that follows the scroll: the name of the subject you are reading is coloured.
+    // It is the last subject whose top has passed a line a third of the way down the screen.
+    let attesa = false;
+    const aggiorna = () => {
+      attesa = false;
+      if (!ind.isConnected) { removeEventListener('scroll', richiedi); removeEventListener('resize', richiedi); return; }
+      const linea = innerHeight / 3, passata = el => el.getBoundingClientRect().top <= linea;
+      const infondo = innerHeight + scrollY >= document.documentElement.scrollHeight - 2;
+      const sez = infondo ? sezioni[sezioni.length - 1] : sezioni.filter(passata).pop() || sezioni[0];
+      ind.querySelectorAll('.indice-materia').forEach(a => {
+        if (sez.id === `materia-${a.closest('.indice-gruppo').dataset.materia}`) a.setAttribute('aria-current', 'location');
+        else a.removeAttribute('aria-current');
+      });
+    };
+    const richiedi = () => { if (!attesa) { attesa = true; requestAnimationFrame(aggiorna); } };
+    addEventListener('scroll', richiedi, { passive: true });
+    addEventListener('resize', richiedi, { passive: true });
+    aggiorna();
   }
 
   // one subject with its chapters and tricks; on its own page the title is already the page heading
@@ -267,7 +325,7 @@
 
   function rigaTrucco(trucco) {
     const st = P.statistiche(P.risposteDi(trucco.id)), dal = P.dati.imparati[trucco.id];
-    return `<li><a href="#/trucco/${trucco.id}">
+    return `<li data-riga="${trucco.id}"><a href="#/trucco/${trucco.id}">
       <span class="numero">${String(trucco.numero).padStart(2, '0')}</span>
       <span class="corpo"><span class="titolo">${esc(tr(trucco.titolo))}</span><span class="sotto">${esc(tr(trucco.sottotitolo))}</span></span>
       <span class="lato">${puntini(trucco.id)}${dal ? `<span class="stato fatto">${t('imparato', 'learnt')} ${P.dataBreve(dal)}</span>` : st.n ? `<span class="stato">${perc(st.precisione)} · ${st.n}</span>` : `<span class="stato">${t('da fare', 'to do')}</span>`}</span>
@@ -289,7 +347,7 @@
     const livelli = statoLivelli(trucco.id), nomiStato = [t('meno di 3 risposte', 'fewer than 3 answers'), t('in allenamento', 'practising'), t('solido', 'solid')];
     const lab = P.laboratori && P.laboratori[trucco.id];
     vista.innerHTML = `<article class="lezione">
-      <p class="briciole"><a href="#/">${esc(tr(m.titolo))}</a> › ${esc(tr(c.titolo))}</p>
+      <p class="briciole"><a href="#/materia/${m.id}">${esc(tr(m.titolo))}</a> › ${esc(tr(c.titolo))}</p>
       <h1><span class="sopratitolo">${t('Trucco', 'Trick')} ${trucco.numero}</span>${esc(tr(trucco.titolo))}</h1>
       <p class="sottotitolo-lezione">${esc(tr(trucco.sottotitolo))}</p>
       <div class="aggancio"><span class="etichetta">${t('La domanda', 'The question')}</span><p>${esc(tr(trucco.aggancio))}</p></div>

@@ -60,7 +60,7 @@
     id: 'opz-pnl-greche',
     materia: 'opzioni',
     capitolo: 'greche',
-    numero: 8,
+    numero: 7,
     titolo: { it: 'Il P&L spiegato con le greche', en: 'P&L explained by the Greeks' },
     sottotitolo: {
       it: 'Delta, gamma, vega e theta, un termine alla volta: quanto ha fatto un\'opzione o un libro in una giornata, e perché.',

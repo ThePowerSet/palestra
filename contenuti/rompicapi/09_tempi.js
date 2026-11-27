@@ -138,7 +138,7 @@
     id: 'bt-tempi',
     materia: 'rompicapi',
     capitolo: 'informazione',
-    numero: 8,
+    numero: 9,
     titolo: { it: 'Orologi, micce e ponti', en: 'Clocks, fuses and bridges' },
     sottotitolo: {
       it: 'Problemi di tempo dove il trucco è scegliere che cosa misurare: gradi al minuto, mezze micce, il tempo invece della strada.',

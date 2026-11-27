@@ -127,7 +127,7 @@
     id: 'bt-casi-piccoli',
     materia: 'rompicapi',
     capitolo: 'contare',
-    numero: 9,
+    numero: 7,
     titolo: { it: 'Parti dai casi piccoli', en: 'Start from small cases' },
     sottotitolo: {
       it: 'Quando il numero è grande, risolvi per 1, 2, 3, guarda lo schema e trova perché regge: cioccolato, torri, monete, teste di fila.',
