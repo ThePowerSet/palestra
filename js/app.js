@@ -227,7 +227,8 @@
       <section class="blocco">
         <div class="blocco-testa"><span class="kicker">${t('Programma', 'Programme')}</span><h2>${t('Tutti i trucchi', 'Every trick')}</h2>
           <p class="mini">${t('I tre puntini sono i livelli: pieno quando sei sopra l\'80% nelle ultime dieci risposte.', 'The three dots are the levels: filled once you are above 80% in the last ten answers.')} <a href="#/schede">${t('Tutte le schede in una pagina →', 'Every summary on one page →')}</a></p></div>`;
-    h += P.materie.map(m => sezioneMateria(m)).join('') + '</section>';
+    // brain teasers are left out here: they have their own page in the header
+    h += P.materie.filter(m => m.id !== 'rompicapi').map(m => sezioneMateria(m)).join('') + '</section>';
     vista.innerHTML = h;
     vista.querySelectorAll('[data-allena]').forEach(b => { b.onclick = () => allenaTrucco(P.trovaTrucco(b.dataset.allena)); });
   }
