@@ -1,6 +1,6 @@
 # Palestra
 
-Mental maths and quick-reasoning drills for trading interviews, one trick at a time. Each trick has a short lesson, exercises generated at random on three levels with a hint for every question, and a worked solution. Then you mix them: random practice, spaced review, timed tests. It opens in English, and every text also has an Italian version.
+Drills for trading interviews, one trick at a time: mental maths, desk numbers, options and Greeks, probability. Each trick has a short lesson, exercises generated at random on three levels with a hint for every question, and a worked solution; some lessons end with a small interactive chart. Then you mix them: random practice, spaced review, timed tests. It opens in English, and every text also has an Italian version.
 
 **Use it:** https://palestra-opal.vercel.app (no account, nothing to install)
 
@@ -22,7 +22,9 @@ The timed test follows the style of the mental maths tests used in trading recru
 | Practice | Random questions from the tricks you pick (by default the ones you have learnt), with hints. The trick's name shows only after you answer |
 | Review | A trick comes back 1, 3, 7, 14 and 30 days after you mark it as learnt, then every 30 days; sooner if you are under 80% in its last 20 answers |
 | Timed test | Ten questions a minute for 2, 5, 8, 10 or 15 minutes, with or without a penalty (+1 if right, −1 if wrong, 0 if skipped). No hints, marking at the end. See "About the timed test" above |
-| Log | Per trick: answers, accuracy, average time, how often you opened a hint. Recent sessions, CSV export |
+| Log | Per trick: answers, accuracy, average time, how often you opened a hint. Timed-test scores over time, recent sessions, CSV export |
+| Cheat sheet | The "In short" box of every trick on one page, to reread before an interview; it prints on paper |
+| Library | Free material from the open web (courses, notes, tools, problems), filtered by topic and level, each with why it is worth the time and where to start |
 
 Keys: Enter answers and moves on, `?` opens the next hint, 1–4 or A–D pick a multiple-choice option. Answers can be typed the way they come: `0.375`, `0,375`, `3/8`, `99-17`, `25000`, `25k`, `2.5m`, `−4%`.
 
@@ -90,6 +92,10 @@ Every text is written in both languages: `P.t('testo italiano', 'English text')`
 
 A new subject is one `Palestra.materia` call in `contenuti/materie.js` and a folder in `contenuti/`.
 
+A lesson can end with a "Try it" piece: add a function to `js/laboratorio.js` under the trick's id (`P.laboratori['trick-id'] = el => { ... }`). It receives an empty element and fills it; no inline styles (the CSP forbids them), so colours come from classes in `stile.css`.
+
+On the home page, the three dots next to each trick are its levels: empty with fewer than three answers at that level, half-filled while practising, filled once at least 80% of the last ten answers are right.
+
 ## Content rules
 
 - No problems, solutions or pages copied from books, courses or paid tests: classic problems are rewritten with new wording and numbers.
@@ -105,17 +111,21 @@ stile.css                   look, light and dark themes, phone layout
 js/motore.js                trick registry, random numbers, formats, answer parsing, storage, review schedule
 js/base.js                  basic arithmetic for the timed test
 js/app.js                   interface
+js/grafici.js               small SVG charts: volatility cone, test scores, normal CDF
+js/laboratorio.js           "Try it" pieces under some lessons, one per trick id
 js/tema.js                  theme applied before the page is drawn (device, light, dark)
 js/nuvola.js                optional sync with a database (see below)
 config.js                   database address and public key; empty = browser only
 contenuti/materie.js        subjects and chapters
 contenuti/<subject>/        one file per trick
+contenuti/risorse.js        the Library's reading list
 strumenti/verifica.js       automatic content check
 strumenti/prova_nuvola.js   sync test with two simulated devices and a simulated database
 supabase/0001_palestra.sql  database tables and access rules
 palestra.py                 local server that writes the CSV; --scarica pulls answers from the database
 vercel.json                 security headers for the hosted site
 fonts/                      Inter, Newsreader and JetBrains Mono, latin subset, with their licences
+favicon.svg                 the tab icon
 ```
 
 The code, its comments and the content identifiers are in Italian; the interface is in both languages.

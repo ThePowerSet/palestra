@@ -17,7 +17,8 @@
           'Position delta = number of options × delta × 100, with its sign: short flips the sign. Then trade shares for the opposite amount.'),
         `${lungo ? '+' : '−'}${n} × ${P.fmt(dOpz)} × 100 = ${P.fmt(tot)}.`,
       ],
-      soluzione: [P.t(`delta = ${P.fmt(tot)} azioni`, `delta = ${P.fmt(tot)} shares`), P.t(`${compra ? 'compri' : 'vendi'} ${azioni(tot)}`, `${compra ? 'buy' : 'sell'} ${azioni(tot)}`)],
+      soluzione: [P.t(`delta: ${lungo ? '+' : '−'}${n} × (${P.fmt(dOpz)}) × 100 = ${P.conSegno(tot)} azioni`, `delta: ${lungo ? '+' : '−'}${n} × (${P.fmt(dOpz)}) × 100 = ${P.conSegno(tot)} shares`),
+        P.t(`per tornare a zero ${compra ? 'compri' : 'vendi'} ${azioni(tot)}`, `to get back to zero, ${compra ? 'buy' : 'sell'} ${azioni(tot)}`)],
     };
   }
 

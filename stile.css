@@ -578,8 +578,9 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 }
 @media (max-width: 600px) {
   h1 { font-size: 1.9rem; }
-  .testata { gap: .8rem; }
-  #nav { -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); }
+  /* two rows on a phone: brand and switches on top, the menu below at full width */
+  .testata { gap: .8rem; flex-wrap: wrap; row-gap: .15rem; padding-bottom: .2rem; }
+  #nav { order: 3; flex-basis: 100%; margin: 0 -.7rem; -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent); mask-image: linear-gradient(90deg, #000 88%, transparent); }
   .tema { margin-left: -.5rem; }
   .passi-oggi { grid-template-columns: 1fr; }
   .passo { grid-template-columns: auto 1fr; }
@@ -596,6 +597,9 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
   .vicini { grid-template-columns: 1fr; }
   .vicini a.dopo { grid-column: 1; }
   .risorse, .schede { grid-template-columns: 1fr; }
+  /* chart text is drawn at 640px wide and shrinks with the chart: make it larger so it stays readable */
+  .lab-grafico .g-asse { font-size: 19px; }
+  .lab-grafico .g-legenda text { font-size: 19px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

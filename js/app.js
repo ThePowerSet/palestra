@@ -205,7 +205,7 @@
     let h = `
       <section class="eroe">
         <div class="eroe-sfondo" aria-hidden="true">${cono}</div>
-        <span class="kicker">${t('Colloqui di trading · calcolo, opzioni, probabilità', 'Trading interviews · mental maths, options, probability')}</span>
+        <span class="kicker">${t('Colloqui di trading · calcolo, opzioni, probabilità, tassi', 'Trading interviews · mental maths, options, probability, rates')}</span>
         <h1>${t('I numeri che un desk ti chiede, <em>un trucco alla volta</em>.', 'The numbers a desk asks for, <em>one trick at a time</em>.')}</h1>
         <p class="lead">${t('Ogni trucco ha una lezione breve, domande generate a caso su tre livelli con i suggerimenti, e torna nel ripasso finché non è tuo. Poi lo metti alla prova a tempo.',
           'Each trick has a short lesson, random questions on three levels with hints, and comes back in review until it sticks. Then you test it against the clock.')}</p>

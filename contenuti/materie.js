@@ -36,6 +36,16 @@ Palestra.materia({
 });
 
 Palestra.materia({
+  id: 'tassi',
+  titolo: { it: 'Tassi e credito', en: 'Rates and credit' },
+  descrizione: { it: 'I conti di un desk tassi o credito: quanto si muove un bond, come si copre, cosa dice lo spread di un CDS.', en: 'The sums of a rates or credit desk: how much a bond moves, how it is hedged, what a CDS spread says.' },
+  capitoli: [
+    { id: 'duration', titolo: { it: 'Duration e DV01', en: 'Duration and DV01' } },
+    { id: 'cds', titolo: { it: 'CDS', en: 'CDS' } },
+  ],
+});
+
+Palestra.materia({
   id: 'sequenze',
   titolo: { it: 'Sequenze', en: 'Sequences' },
   descrizione: { it: 'Trovare la regola in pochi secondi, come nei test numerici.', en: 'Finding the rule in a few seconds, as in numerical tests.' },
