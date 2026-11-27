@@ -1,6 +1,7 @@
 /* Palestra, styled like thepowerset.github.io: warm paper by day, blue-black night in the dark,
    blue for actions, orange for marks, Newsreader for headings and lessons, Inter for the interface,
-   JetBrains Mono for numbers and small labels. Colour values are the site's own (_sass/_variables.scss).
+   JetBrains Mono for numbers and small labels. Colour values are the site's own (_sass/_variables.scss),
+   except --tenue, a step darker (lighter at night) so that secondary text stays easy to read.
    No inline styles anywhere (the CSP forbids them): charts and bars take their colours from classes here. */
 
 /* The site's fonts, served from this folder so visitors' browsers contact no one else
@@ -14,7 +15,7 @@
   --sfondo: #f6f4ee;
   --carta: #fffefb;
   --testo: #15171c;
-  --tenue: #666b75;
+  --tenue: #5b606a;
   --linea: rgba(21, 23, 28, 0.12);
   --linea-forte: rgba(21, 23, 28, 0.24);
   --accento: #1d58c7;
@@ -40,7 +41,7 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --sfondo: #0d1016; --carta: #141922; --testo: #e8eaef; --tenue: #8e96a3; --linea: #252b36; --linea-forte: #36404f;
+    --sfondo: #0d1016; --carta: #141922; --testo: #e8eaef; --tenue: #a3abb8; --linea: #252b36; --linea-forte: #36404f;
     --accento: #6ea8ff; --accento-testo: #0d1016; --accento-chiaro: #16233a; --arancio: #f2a03d; --arancio-chiaro: #2a2114;
     --giusto: #74cf9b; --giusto-chiaro: #12271b; --errato: #f08f84; --errato-chiaro: #33201e;
     --aiuto: #f2a03d; --aiuto-chiaro: #2a2114; --esempio: #161c26;
@@ -50,7 +51,7 @@
   }
 }
 :root[data-theme="dark"] {
-  --sfondo: #0d1016; --carta: #141922; --testo: #e8eaef; --tenue: #8e96a3; --linea: #252b36; --linea-forte: #36404f;
+  --sfondo: #0d1016; --carta: #141922; --testo: #e8eaef; --tenue: #a3abb8; --linea: #252b36; --linea-forte: #36404f;
   --accento: #6ea8ff; --accento-testo: #0d1016; --accento-chiaro: #16233a; --arancio: #f2a03d; --arancio-chiaro: #2a2114;
   --giusto: #74cf9b; --giusto-chiaro: #12271b; --errato: #f08f84; --errato-chiaro: #33201e;
   --aiuto: #f2a03d; --aiuto-chiaro: #2a2114; --esempio: #161c26;
@@ -69,8 +70,7 @@ body {
   color: var(--testo);
   font: 16px/1.6 var(--sans);
   font-variant-numeric: tabular-nums;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* no -webkit-font-smoothing: antialiased here: on macOS it drops the stem darkening and every font looks thin */
   overflow-x: clip;
 }
 /* a faint wash of the theme colour behind the top of the page, as on the site */
@@ -295,7 +295,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .sottotitolo-lezione { color: var(--tenue); font-size: 1.05rem; margin: 0 0 1rem; }
 .aggancio { position: relative; background: var(--carta); border: 1px solid var(--linea); border-radius: var(--raggio); padding: 1.1rem 1.3rem 1.1rem 1.5rem; margin: 1.4rem 0; box-shadow: var(--ombra); overflow: hidden; }
 .aggancio::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: linear-gradient(var(--accento), var(--arancio)); }
-.aggancio p { margin: 0; font: italic 1.2rem/1.55 var(--serif); }
+.aggancio p { margin: 0; font: italic 450 1.2rem/1.55 var(--serif); font-variation-settings: "opsz" 14; }
 .azioni-lezione { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1.2rem 0; }
 .andamento { margin: .4rem 0 1.4rem; }
 .andamento .mini { margin: 0 0 .5rem; }
@@ -305,7 +305,9 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .livelli-stato i { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--linea-forte); }
 .livelli-stato .s1 i { border-color: var(--arancio); background: color-mix(in srgb, var(--arancio) 35%, transparent); }
 .livelli-stato .s2 i { border-color: var(--giusto); background: var(--giusto); }
-.testo-lezione { font: 1.18rem/1.72 var(--serif); }
+/* Running text in Newsreader: a little heavier than regular, and the optical size of small text,
+   whose hairlines are thicker than the size-matched cut the browser would pick. */
+.testo-lezione { font: 450 1.18rem/1.72 var(--serif); font-variation-settings: "opsz" 14; }
 .testo-lezione h3 { font: 600 .78rem var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--arancio); margin: 2.4rem 0 .5rem; }
 .testo-lezione p { margin: .6rem 0; }
 .testo-lezione ul { padding-left: 1.2rem; }
